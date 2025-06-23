@@ -24,6 +24,8 @@ export default function Navbar() {
   const menuItems = [
     { name: "首页", href: "/" },
     { name: "商品展示", href: "/products" },
+    { name: "联系我们", href: "/contact" },
+    { name: "个人中心", href: "/user" },
   ];
 
   return (
