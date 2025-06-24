@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { createOrder } from "@/app/actions";
+import { PurchaseModal } from "@/components/PurchaseModal";
+import type { ProductInfo } from "@/hooks/usePurchaseFlow";
 
 // 为客户端组件定义一个纯粹的、与数据库实现无关的类型
 export interface ProductType {
@@ -20,33 +21,13 @@ interface ProductListProps {
   selectedCategory: string;
 }
 
-function PurchaseButton({ productId }: { productId: number }) {
-  const [isPending, startTransition] = useTransition();
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    startTransition(() => {
-      // 创建一个新的 FormData 并手动提交
-      const formData = new FormData(e.currentTarget);
-      createOrder(formData);
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input type="hidden" name="productId" value={productId} />
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "处理中..." : "购买"}
-      </Button>
-    </form>
-  );
-}
-
 export default function ProductList({
   products,
   selectedCategory,
 }: ProductListProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductInfo | null>(null);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -66,6 +47,18 @@ export default function ProductList({
   
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handlePurchaseClick = (product: ProductType) => {
+    // 转换为Modal所需的格式
+    const productInfo: ProductInfo = {
+      id: product.id.toString(),
+      name: product.name,
+      price: product.price,
+      image: product.image,
+    };
+    setSelectedProduct(productInfo);
+    setIsModalOpen(true);
   };
 
   return (
@@ -103,11 +96,23 @@ export default function ProductList({
               <p className="text-gray-600 line-clamp-2 min-h-[3rem]">
                 {product.description}
               </p>
-              <div className="flex justify-between mt-auto pt-4">
-                <Link href={`/products/${product.id}`} passHref>
-                  <Button variant="outline">详情</Button>
-                </Link>
-                <PurchaseButton productId={product.id} />
+              <div className="mt-auto pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xl font-bold text-blue-600">
+                    ¥{product.price.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Link href={`/products/${product.id}`} passHref className="flex-1">
+                    <Button variant="outline" className="w-full">详情</Button>
+                  </Link>
+                  <Button 
+                    onClick={() => handlePurchaseClick(product)}
+                    className="flex-1"
+                  >
+                    购买
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -123,6 +128,13 @@ export default function ProductList({
           下一页
         </Button>
       </div>
+
+      {/* 购买Modal */}
+      <PurchaseModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={selectedProduct}
+      />
     </div>
   );
 } 

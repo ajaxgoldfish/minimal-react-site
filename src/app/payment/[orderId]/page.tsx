@@ -1,28 +1,40 @@
 import "reflect-metadata";
-import { AppDataSource } from "@/db/data-source";
+// import { AppDataSource } from "@/db/data-source"; // We will move this
 import { Order } from "@/db/entity/Order";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { confirmPayment } from "@/app/actions";
 
 async function getOrder(orderId: number) {
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
+  try {
+    const { AppDataSource } = await import("@/db/data-source");
+    if (!AppDataSource.isInitialized) {
+      await AppDataSource.initialize();
+    }
+    const orderRepository = AppDataSource.getRepository(Order);
+    const order = await orderRepository.findOne({
+      where: { id: orderId },
+      relations: ["product", "user"],
+    });
+    return order;
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    return null;
   }
-  const orderRepository = AppDataSource.getRepository(Order);
-  const order = await orderRepository.findOne({
-    where: { id: orderId },
-    relations: ["product", "user"],
-  });
-  return order;
 }
 
 export default async function PaymentPage({
   params,
 }: {
-  params: { orderId: string };
+  params: Promise<{ orderId: string }>;
 }) {
-  const orderId = parseInt(params.orderId);
+  const resolvedParams = await params;
+  const orderId = parseInt(resolvedParams.orderId);
+  
+  if (isNaN(orderId)) {
+    notFound();
+  }
+  
   const order = await getOrder(orderId);
 
   if (!order) {

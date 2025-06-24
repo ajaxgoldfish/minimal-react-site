@@ -98,6 +98,74 @@ export async function createOrder(formData: FormData) {
   redirect(`/payment/${order.id}`);
 }
 
+// 新增：专门为Modal流程设计的创建订单函数
+export async function createOrderForModal(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  const productId = formData.get("productId") as string;
+  if (!productId) {
+    throw new Error("Product ID is required");
+  }
+
+  if (!AppDataSource.isInitialized) {
+    await AppDataSource.initialize();
+  }
+
+  const userRepository = AppDataSource.getRepository(User);
+  const productRepository = AppDataSource.getRepository(Product);
+  const orderRepository = AppDataSource.getRepository(Order);
+
+  // 查找或创建用户
+  let dbUser = await userRepository.findOne({ where: { clerkId: userId } });
+  if (!dbUser) {
+    const user = await currentUser();
+    if (!user) {
+        throw new Error("无法获取用户详细信息。")
+    }
+    dbUser = userRepository.create({
+      clerkId: user.id,
+      name: user.firstName || user.username || "",
+    });
+    await userRepository.save(dbUser);
+  }
+
+  // 查找商品
+  const product = await productRepository.findOne({
+    where: { id: parseInt(productId) },
+  });
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  // 创建订单
+  const order = orderRepository.create({
+    user: dbUser,
+    product: product,
+    amount: product.price,
+    status: "pending",
+  });
+
+  await orderRepository.save(order);
+
+  // 返回订单信息而不是重定向
+  return {
+    success: true,
+    order: {
+      id: order.id,
+      amount: order.amount,
+      status: order.status,
+      product: {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+      }
+    }
+  };
+}
+
 export async function confirmPayment(formData: FormData) {
   const orderId = formData.get("orderId") as string;
   if (!orderId) {
