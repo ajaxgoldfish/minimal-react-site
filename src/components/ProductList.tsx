@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { createOrder } from "@/app/actions";
 
 // 为客户端组件定义一个纯粹的、与数据库实现无关的类型
 export interface ProductType {
@@ -15,7 +16,7 @@ export interface ProductType {
 }
 
 interface ProductListProps {
-  products: ProductType[]; // <-- 使用新的纯类型
+  products: ProductType[];
   selectedCategory: string;
 }
 
@@ -84,7 +85,10 @@ export default function ProductList({
                 <Link href={`/products/${product.id}`} passHref>
                   <Button variant="outline">详情</Button>
                 </Link>
-                <Button>购买</Button>
+                <form action={createOrder}>
+                  <input type="hidden" name="productId" value={product.id} />
+                  <Button type="submit">购买</Button>
+                </form>
               </div>
             </div>
           </div>
