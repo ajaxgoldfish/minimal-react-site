@@ -41,8 +41,8 @@ export async function getUsers() {
 }
 
 export async function createOrder(formData: FormData) {
-  const user = await currentUser();
-  if (!user) {
+  const { userId } = await auth();
+  if (!userId) {
     redirect("/sign-in");
     return;
   }
@@ -61,8 +61,14 @@ export async function createOrder(formData: FormData) {
   const orderRepository = AppDataSource.getRepository(Order);
 
   // 查找或创建用户
-  let dbUser = await userRepository.findOne({ where: { clerkId: user.id } });
+  let dbUser = await userRepository.findOne({ where: { clerkId: userId } });
   if (!dbUser) {
+    // 仅在需要创建新用户时，才获取完整的用户信息
+    const user = await currentUser();
+    if (!user) {
+        // 这理论上不应该发生，因为我们已经通过了userId检查
+        throw new Error("无法获取用户详细信息。")
+    }
     dbUser = userRepository.create({
       clerkId: user.id,
       name: user.firstName || user.username || "",

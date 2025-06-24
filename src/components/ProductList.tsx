@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createOrder } from "@/app/actions";
@@ -18,6 +18,28 @@ export interface ProductType {
 interface ProductListProps {
   products: ProductType[];
   selectedCategory: string;
+}
+
+function PurchaseButton({ productId }: { productId: number }) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    startTransition(() => {
+      // 创建一个新的 FormData 并手动提交
+      const formData = new FormData(e.currentTarget);
+      createOrder(formData);
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="hidden" name="productId" value={productId} />
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "处理中..." : "购买"}
+      </Button>
+    </form>
+  );
 }
 
 export default function ProductList({
@@ -85,10 +107,7 @@ export default function ProductList({
                 <Link href={`/products/${product.id}`} passHref>
                   <Button variant="outline">详情</Button>
                 </Link>
-                <form action={createOrder}>
-                  <input type="hidden" name="productId" value={product.id} />
-                  <Button type="submit">购买</Button>
-                </form>
+                <PurchaseButton productId={product.id} />
               </div>
             </div>
           </div>
