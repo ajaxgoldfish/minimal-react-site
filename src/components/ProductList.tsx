@@ -1,32 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Product } from "@/db/entity/Product";
 
-interface ProductListProps {
-  products: Product[];
+// 为客户端组件定义一个纯粹的、与数据库实现无关的类型
+export interface ProductType {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  category: string;
+  price: number;
 }
 
-export default function ProductList({ products }: ProductListProps) {
+interface ProductListProps {
+  products: ProductType[]; // <-- 使用新的纯类型
+  selectedCategory: string;
+}
+
+export default function ProductList({
+  products,
+  selectedCategory,
+}: ProductListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const categories = ["所有商品", ...new Set(products.map((p) => p.category))];
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
 
-  // 分类筛选逻辑（暂存，后续可实现）
-  const filteredProducts = products;
+  const categories = ["所有商品", "一类", "二类", "三类", "四类", "五类"];
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const totalPages = Math.ceil(products.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+  const currentProducts = products.slice(startIndex, endIndex);
 
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
-
+  
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
@@ -34,12 +48,24 @@ export default function ProductList({ products }: ProductListProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4 text-center">商品展示</h1>
-      
+
       <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
         {categories.map((category) => (
-          <Button key={category} variant="ghost" className="text-gray-600">
-            {category}
-          </Button>
+          <Link
+            key={category}
+            href={
+              category === "所有商品"
+                ? "/products"
+                : `/products?category=${category}`
+            }
+            passHref
+          >
+            <Button
+              variant={selectedCategory === category ? "default" : "ghost"}
+            >
+              {category}
+            </Button>
+          </Link>
         ))}
       </div>
 

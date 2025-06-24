@@ -8,7 +8,7 @@ const productsData = [
       name: "高性能笔记本电脑",
       description: "搭载最新一代处理器，适用于专业工作和游戏。",
       image: "/file.svg",
-      category: "电子产品",
+      category: "一类",
       price: 999.99,
     },
     {
@@ -16,7 +16,7 @@ const productsData = [
       name: "无线降噪耳机",
       description: "沉浸式音效体验，长达30小时电池续航。",
       image: "/globe.svg",
-      category: "电子产品",
+      category: "一类",
       price: 249.99,
     },
     {
@@ -24,7 +24,7 @@ const productsData = [
       name: "智能运动手表",
       description: "全天候健康监测，多种运动模式可选。",
       image: "/window.svg",
-      category: "穿戴设备",
+      category: "二类",
       price: 199.99,
     },
     {
@@ -32,7 +32,7 @@ const productsData = [
       name: "4K超高清显示器",
       description: "色彩精准，细节丰富，为创作者和设计师打造。",
       image: "/file.svg",
-      category: "电子产品",
+      category: "三类",
       price: 499.99,
     },
     {
@@ -40,7 +40,7 @@ const productsData = [
       name: "人体工学办公椅",
       description: "舒适支撑，缓解久坐疲劳，提升工作效率。",
       image: "/globe.svg",
-      category: "家居办公",
+      category: "三类",
       price: 399.99,
     },
     {
@@ -48,7 +48,7 @@ const productsData = [
       name: "便携咖啡机",
       description: "随时随地享用香醇咖啡，简单易用。",
       image: "/window.svg",
-      category: "生活电器",
+      category: "四类",
       price: 89.99,
     },
     {
@@ -56,7 +56,7 @@ const productsData = [
       name: "多功能登山包",
       description: "轻便耐磨，大容量设计，满足户外探险需求。",
       image: "/file.svg",
-      category: "户外运动",
+      category: "五类",
       price: 129.99,
     },
   ];
