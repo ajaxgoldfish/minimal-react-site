@@ -4,4 +4,4 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold">这里是首页</h1>
     </div>
   );
-} 
+}

@@ -59,7 +59,7 @@ const categories = ["所有商品", "电子产品", "穿戴设备", "家居办�
 
 export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // 每页显示4个商品
+  const itemsPerPage = 8; // 每页显示8个商品
   
   // 分类筛选逻辑（暂存，后续可实现）
   const filteredProducts = products; 
