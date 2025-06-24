@@ -29,8 +29,11 @@ export class Order {
   @Column({ type: "varchar", nullable: true })
   paypalOrderId?: string;
 
-  @Column({ type: "varchar", nullable: true })
-  userId!: string; // Clerk user ID
+  @Column({ type: "integer", nullable: true })
+  userId!: number; // Database user ID
+
+  @Column({ type: "integer", nullable: true })
+  productId!: number; // Database product ID
 
   @CreateDateColumn()
   createdAt!: Date;

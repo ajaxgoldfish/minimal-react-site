@@ -4,6 +4,7 @@ import { paypalService } from '@/lib/paypal';
 import { AppDataSource } from '@/db/data-source';
 import { Order } from '@/db/entity/Order';
 import { Product } from '@/db/entity/Product';
+import { User } from '@/db/entity/User';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +31,19 @@ export async function POST(request: NextRequest) {
       await AppDataSource.initialize();
     }
 
+    // 首先获取当前用户信息
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOne({
+      where: { clerkId: userId },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: '用户不存在' },
+        { status: 404 }
+      );
+    }
+
     // 获取订单信息
     const orderRepo = AppDataSource.getRepository(Order);
     const order = await orderRepo.findOne({
@@ -52,8 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证订单所有者
-    if (order.userId !== userId) {
+    // 验证订单所有者（使用数据库用户ID）
+    if (order.userId !== user.id) {
       return NextResponse.json(
         { error: '无权限访问此订单' },
         { status: 403 }
