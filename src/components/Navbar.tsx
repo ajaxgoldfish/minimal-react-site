@@ -19,13 +19,14 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   const menuItems = [
     { name: "首页", href: "/" },
     { name: "商品展示", href: "/products" },
     { name: "联系我们", href: "/contact" },
-    { name: "个人中心", href: "/user" },
+    { name: "订单中心", href: "/user" },
   ];
 
   return (
@@ -64,6 +65,14 @@ export default function Navbar() {
                     {item.name}
                   </Link>
                 ))}
+                <SignedOut>
+                  <Link href="/sign-in" className="text-muted-foreground hover:text-foreground text-center">
+                    登录
+                  </Link>
+                  <Link href="/sign-up" className="text-muted-foreground hover:text-foreground text-center">
+                    注册
+                  </Link>
+                </SignedOut>
               </nav>
             </SheetContent>
           </Sheet>
@@ -88,6 +97,18 @@ export default function Navbar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
+            <SignedOut>
+              <NavigationMenuItem>
+                <Link href="/sign-in" className={navigationMenuTriggerStyle()}>
+                  登录
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/sign-up" className={navigationMenuTriggerStyle()}>
+                  注册
+                </Link>
+              </NavigationMenuItem>
+            </SignedOut>
           </NavigationMenuList>
         </NavigationMenu>
         
@@ -96,6 +117,13 @@ export default function Navbar() {
             <Link href="#" className="inline-flex items-center text-lg font-semibold">
                 <Package2 className="h-6 w-6" />
             </Link>
+        </div>
+
+        {/* Clerk Auth Buttons */}
+        <div className="flex items-center gap-2">
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </nav>
     </header>
