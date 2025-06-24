@@ -23,6 +23,15 @@ export class Order {
   @Column("decimal")
   amount!: number;
 
+  @Column({ type: "varchar", length: 3, default: "USD" })
+  currency!: string;
+
+  @Column({ type: "varchar", nullable: true })
+  paypalOrderId?: string;
+
+  @Column({ type: "varchar", nullable: true })
+  userId!: string; // Clerk user ID
+
   @CreateDateColumn()
   createdAt!: Date;
 
