@@ -4,6 +4,8 @@ import "reflect-metadata";
 import { AppDataSource } from "@/db/data-source";
 import { User } from "@/db/entity/User";
 import { Order } from "@/db/entity/Order";
+import { Button } from "@/components/ui/button";
+import { cancelOrder, repayOrder } from "@/app/actions";
 
 async function getOrders(clerkId: string) {
   if (!AppDataSource.isInitialized) {
@@ -48,25 +50,50 @@ export default async function UserPage() {
             <p className="text-gray-500">您还没有任何订单。</p>
           </div>
         ) : (
-          orders.map((order) => (
-            <div key={order.id} className="bg-white shadow-md rounded-lg p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <div className="flex-grow mb-4 sm:mb-0">
-                <p className="text-sm text-gray-500 font-mono">订单号: {order.id}</p>
-                <h2 className="text-xl font-semibold mt-1">{order.product.name}</h2>
-                <p className="text-sm text-gray-500 mt-2">
-                  {new Date(order.createdAt).toLocaleString()}
-                </p>
+          orders.map((order) => {
+            const isPending = order.status === 'pending';
+            const isCancelled = order.status === 'cancelled';
+            const statusStyles = {
+              paid: 'bg-green-100 text-green-800',
+              pending: 'bg-yellow-100 text-yellow-800',
+              cancelled: 'bg-gray-100 text-gray-500',
+            };
+            const statusTexts = {
+              paid: '已支付',
+              pending: '待支付',
+              cancelled: '已取消',
+            };
+
+            return (
+              <div key={order.id} className={`bg-white shadow-md rounded-lg p-6 flex flex-col sm:flex-row justify-between items-start ${isCancelled ? 'opacity-60' : ''}`}>
+                <div className="flex-grow mb-4 sm:mb-0">
+                  <p className="text-sm text-gray-500 font-mono">订单号: {order.id}</p>
+                  <h2 className="text-xl font-semibold mt-1">{order.product.name}</h2>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {new Date(order.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
+                  <p className="text-2xl font-bold mb-2">¥{Number(order.amount).toFixed(2)}</p>
+                  <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusStyles[order.status as keyof typeof statusStyles]}`}>
+                    {statusTexts[order.status as keyof typeof statusTexts]}
+                  </span>
+                  {isPending && (
+                    <div className="flex items-center gap-2 mt-4">
+                      <form action={cancelOrder}>
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <Button type="submit" variant="ghost" size="sm">取消订单</Button>
+                      </form>
+                      <form action={repayOrder}>
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <Button type="submit" size="sm">重新支付</Button>
+                      </form>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
-                <p className="text-2xl font-bold mb-2">¥{Number(order.amount).toFixed(2)}</p>
-                <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                  order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {order.status === 'paid' ? '已支付' : '待支付'}
-                </span>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

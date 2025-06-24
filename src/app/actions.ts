@@ -122,4 +122,44 @@ export async function confirmPayment(formData: FormData) {
 
   // 支付成功后，重定向到用户中心
   redirect("/user");
+}
+
+export async function cancelOrder(formData: FormData) {
+  const orderId = formData.get("orderId") as string;
+  if (!orderId) {
+    throw new Error("Order ID is required");
+  }
+
+  // 可以在这里添加额外的用户权限校验，确保只有订单所有者才能取消
+  // const { userId } = auth(); ...
+
+  if (!AppDataSource.isInitialized) {
+    await AppDataSource.initialize();
+  }
+  const orderRepository = AppDataSource.getRepository(Order);
+  
+  const order = await orderRepository.findOne({
+    where: { id: parseInt(orderId) },
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  // 只能取消待支付的订单
+  if (order.status === 'pending') {
+    order.status = "cancelled";
+    await orderRepository.save(order);
+  }
+
+  // 操作完成后刷新当前页面
+  redirect("/user");
+}
+
+export async function repayOrder(formData: FormData) {
+  const orderId = formData.get("orderId") as string;
+  if (!orderId) {
+    throw new Error("Order ID is required");
+  }
+  redirect(`/payment/${orderId}`);
 } 
