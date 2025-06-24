@@ -29,6 +29,7 @@ export function PayPalPayment({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debug, setDebug] = useState<string>('');
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   // 检查环境变量
   useEffect(() => {
@@ -41,8 +42,27 @@ export function PayPalPayment({
       return;
     }
 
-    setDebug(`Client ID: ${clientId.substring(0, 10)}...`);
-  }, []);
+    setDebug(`Client ID: ${clientId.substring(0, 10)}...\nWaiting for SDK to load...`);
+
+    // 设置一个超时检查
+    const timeout = setTimeout(() => {
+      if (!scriptLoaded) {
+        setDebug(prev => prev + '\nSDK loading timeout - checking manually...');
+        
+        // 手动检查 PayPal 是否已加载
+        if (window.paypal) {
+          setDebug(prev => prev + '\nPayPal found in window object');
+          handleScriptLoadSuccess();
+        } else {
+          setDebug(prev => prev + '\nPayPal not found in window object');
+          setError('PayPal SDK 加载超时');
+          setIsLoading(false);
+        }
+      }
+    }, 10000); // 10秒超时
+
+    return () => clearTimeout(timeout);
+  }, [scriptLoaded]);
 
   const initializePayPal = () => {
     console.log('Initializing PayPal...');
@@ -54,6 +74,8 @@ export function PayPalPayment({
       setIsLoading(false);
       return;
     }
+
+    setDebug(prev => prev + '\nPayPal SDK found, creating buttons...');
 
     try {
       console.log('Creating PayPal buttons...');
@@ -155,32 +177,37 @@ export function PayPalPayment({
       }).catch((error: any) => {
         console.error('Error rendering PayPal buttons:', error);
         setDebug(prev => prev + `\nRender error: ${error}`);
-        setError('PayPal 按钮渲染失败');
+        setError('PayPal 按钮渲染失败: ' + error.message);
         setIsLoading(false);
       });
 
     } catch (error) {
       console.error('Error initializing PayPal:', error);
       setDebug(prev => prev + `\nInitialization error: ${error}`);
-      setError('初始化PayPal支付失败');
+      setError('初始化PayPal支付失败: ' + (error as Error).message);
       setIsLoading(false);
     }
   };
 
-  const handleScriptLoad = () => {
+  const handleScriptLoadSuccess = () => {
     console.log('PayPal SDK loaded successfully');
+    setScriptLoaded(true);
     setDebug(prev => prev + '\nPayPal SDK loaded successfully');
     
     // 添加一个小延迟确保SDK完全初始化
     setTimeout(() => {
       initializePayPal();
-    }, 100);
+    }, 200);
   };
 
-  const handleScriptError = () => {
-    console.error('Failed to load PayPal SDK');
+  const handleScriptLoad = () => {
+    handleScriptLoadSuccess();
+  };
+
+  const handleScriptError = (error: any) => {
+    console.error('Failed to load PayPal SDK:', error);
     setError('PayPal SDK 加载失败');
-    setDebug(prev => prev + '\nPayPal SDK 加载失败');
+    setDebug(prev => prev + '\nPayPal SDK 加载失败: ' + error);
     setIsLoading(false);
   };
 
@@ -194,12 +221,16 @@ export function PayPalPayment({
     );
   }
 
+  // 构建PayPal SDK URL
+  const paypalSdkUrl = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture&disable-funding=credit,card`;
+
   return (
     <div className="w-full">
       <Script
-        src={`https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture`}
+        src={paypalSdkUrl}
         onLoad={handleScriptLoad}
         onError={handleScriptError}
+        strategy="lazyOnload"
       />
       
       <div className="bg-white rounded-lg border p-6">
@@ -219,14 +250,17 @@ export function PayPalPayment({
             </div>
             
             {/* 调试信息 */}
-            {debug && (
-              <details className="mt-4">
-                <summary className="text-sm text-gray-500 cursor-pointer">显示调试信息</summary>
-                <pre className="mt-2 p-2 bg-gray-100 text-xs rounded whitespace-pre-wrap">
-                  {debug}
-                </pre>
-              </details>
-            )}
+            <details className="mt-4">
+              <summary className="text-sm text-gray-500 cursor-pointer">显示调试信息</summary>
+              <pre className="mt-2 p-2 bg-gray-100 text-xs rounded whitespace-pre-wrap">
+                {debug || '正在初始化...'}
+              </pre>
+              <div className="mt-2 text-xs text-gray-400">
+                <p>SDK URL: {paypalSdkUrl}</p>
+                <p>Script Loaded: {scriptLoaded ? '是' : '否'}</p>
+                <p>PayPal Object: {typeof window !== 'undefined' && window.paypal ? '存在' : '不存在'}</p>
+              </div>
+            </details>
           </div>
         )}
 
@@ -241,20 +275,24 @@ export function PayPalPayment({
             <p className="text-red-600 mt-1">{error}</p>
             
             {/* 调试信息 */}
-            {debug && (
-              <details className="mt-2">
-                <summary className="text-sm text-red-500 cursor-pointer">显示调试信息</summary>
-                <pre className="mt-2 p-2 bg-red-100 text-xs rounded whitespace-pre-wrap">
-                  {debug}
-                </pre>
-              </details>
-            )}
+            <details className="mt-2">
+              <summary className="text-sm text-red-500 cursor-pointer">显示调试信息</summary>
+              <pre className="mt-2 p-2 bg-red-100 text-xs rounded whitespace-pre-wrap">
+                {debug}
+              </pre>
+              <div className="mt-2 text-xs text-red-400">
+                <p>SDK URL: {paypalSdkUrl}</p>
+                <p>Script Loaded: {scriptLoaded ? '是' : '否'}</p>
+                <p>PayPal Object: {typeof window !== 'undefined' && window.paypal ? '存在' : '不存在'}</p>
+              </div>
+            </details>
             
             <button
               onClick={() => {
                 setError(null);
                 setDebug('');
                 setIsLoading(true);
+                setScriptLoaded(false);
                 window.location.reload();
               }}
               className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
