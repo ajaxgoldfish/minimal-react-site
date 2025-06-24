@@ -21,8 +21,11 @@ export default async function ProductsPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
+  const resolvedSearchParams = await searchParams;
   const category =
-    typeof searchParams?.category === "string" ? searchParams.category : "所有商品";
+    typeof resolvedSearchParams?.category === "string"
+      ? resolvedSearchParams.category
+      : "所有商品";
   const products = await getProducts(category);
   const plainProducts = JSON.parse(JSON.stringify(products));
 
