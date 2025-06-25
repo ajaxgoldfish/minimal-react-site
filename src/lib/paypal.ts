@@ -226,5 +226,11 @@ export class PayPalService {
   }
 }
 
-// 导出单例实例
-export const paypalService = new PayPalService(); 
+// 导出一个函数来获取单例实例
+let instance: PayPalService | null = null;
+export function getPayPalService(): PayPalService {
+  if (!instance) {
+    instance = new PayPalService();
+  }
+  return instance;
+} 

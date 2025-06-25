@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { paypalService } from '@/lib/paypal';
+import { getPayPalService } from '@/lib/paypal';
 import { AppDataSource } from '@/db/data-source';
 import { Order } from '@/db/entity/Order';
 
@@ -74,10 +74,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 捕获 PayPal 支付
+    // 捕获 PayPal 付款
+    const paypalService = getPayPalService();
     const captureResult = await paypalService.capturePayment(paypalOrderId);
 
-    if (!captureResult.success) {
+    if (!captureResult || !captureResult.success) {
+      console.error('PayPal capture failed:', captureResult);
       return NextResponse.json(
         { error: '捕获PayPal支付失败' },
         { status: 500 }

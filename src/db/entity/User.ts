@@ -15,6 +15,6 @@ export class User {
     @Column({ nullable: true })
     age!: number;
 
-    @OneToMany('Order', (order: Order) => order.user)
+    @OneToMany(() => Order, (order: Order) => order.user)
     orders!: Order[];
 } 

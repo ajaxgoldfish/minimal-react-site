@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { paypalService } from '@/lib/paypal';
+import { getPayPalService } from '@/lib/paypal';
 import { AppDataSource } from '@/db/data-source';
 import { Order } from '@/db/entity/Order';
 import { User } from '@/db/entity/User';
@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建 PayPal 订单
+    const paypalService = getPayPalService();
     const paypalResult = await paypalService.createOrder({
       orderId: order.id,
       amount: order.amount.toFixed(2),

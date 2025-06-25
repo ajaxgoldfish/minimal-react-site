@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { paypalService } from '@/lib/paypal';
+import { getPayPalService } from '@/lib/paypal';
 import { AppDataSource } from '@/db/data-source';
 import { Order } from '@/db/entity/Order';
 
@@ -10,7 +10,8 @@ export async function POST(request: NextRequest) {
     const headers = request.headers;
 
     // 验证 Webhook 签名（沙盒环境简化版）
-    const webhookId = process.env.PAYPAL_WEBHOOK_ID || 'test-webhook-id';
+    const webhookId = 'YOUR_PAYPAL_WEBHOOK_ID';
+    const paypalService = getPayPalService();
     const isValid = await paypalService.verifyWebhookSignature(headers, body, webhookId);
 
     if (!isValid) {

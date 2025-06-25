@@ -38,7 +38,7 @@ export class Order {
   @CreateDateColumn()
   createdAt!: Date;
 
-  @ManyToOne('User', (user: User) => user.orders)
+  @ManyToOne(() => User, (user: User) => user.orders)
   user!: User;
 
   @ManyToOne(() => Product)

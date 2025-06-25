@@ -1,7 +1,5 @@
 import { DataSource } from "typeorm";
-import { User } from "./entity/User";
-import { Product } from "./entity/Product";
-import { Order } from "./entity/Order";
+import path from 'path';
 
 export const AppDataSource = new DataSource({
     type: "sqlite",
@@ -9,7 +7,7 @@ export const AppDataSource = new DataSource({
     synchronize: true,
     
     logging: true,
-    entities: [User, Product, Order],
+    entities: [path.join(__dirname, '/entity/*.{js,ts}')],
     subscribers: [],
     migrations: [],
 }); 
