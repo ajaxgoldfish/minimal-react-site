@@ -2,7 +2,6 @@
 
 import "reflect-metadata";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { AppDataSource } from "@/db/data-source";
 import { User } from "@/db/entity/User";
 import { Product } from "@/db/entity/Product";
@@ -29,10 +28,9 @@ export async function getUsers() {
     
     const users = await AppDataSource.manager.find(User);
     console.log("Fetched users:", users);
-    return JSON.parse(JSON.stringify(users)); // Serialize users to be sent to the client
+    return JSON.parse(JSON.stringify(users));
   } catch (error) {
     console.error("Error during data source operation:", error);
-    // On subsequent calls after a failed initialization, it might be necessary to reset
     if (AppDataSource.isInitialized) {
         await AppDataSource.destroy();
     }
@@ -40,65 +38,7 @@ export async function getUsers() {
   }
 }
 
-export async function createOrder(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) {
-    redirect("/sign-in");
-    return;
-  }
-
-  const productId = formData.get("productId") as string;
-  if (!productId) {
-    throw new Error("Product ID is required");
-  }
-
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-  }
-
-  const userRepository = AppDataSource.getRepository(User);
-  const productRepository = AppDataSource.getRepository(Product);
-  const orderRepository = AppDataSource.getRepository(Order);
-
-  // 查找或创建用户
-  let dbUser = await userRepository.findOne({ where: { clerkId: userId } });
-  if (!dbUser) {
-    // 仅在需要创建新用户时，才获取完整的用户信息
-    const user = await currentUser();
-    if (!user) {
-        // 这理论上不应该发生，因为我们已经通过了userId检查
-        throw new Error("无法获取用户详细信息。")
-    }
-    dbUser = userRepository.create({
-      clerkId: user.id,
-      name: user.firstName || user.username || "",
-    });
-    await userRepository.save(dbUser);
-  }
-
-  // 查找商品
-  const product = await productRepository.findOne({
-    where: { id: parseInt(productId) },
-  });
-  if (!product) {
-    throw new Error("Product not found");
-  }
-
-  // 创建订单
-  const order = orderRepository.create({
-    user: dbUser,
-    product: product,
-    amount: product.price,
-    status: "pending",
-  });
-
-  await orderRepository.save(order);
-
-  // 重定向到支付页面
-  redirect(`/payment/${order.id}`);
-}
-
-// 新增：专门为Modal流程设计的创建订单函数
+// 专门为Modal流程设计的创建订单函数
 export async function createOrderForModal(formData: FormData) {
   const { userId } = await auth();
   if (!userId) {
