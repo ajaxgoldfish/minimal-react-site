@@ -3,7 +3,6 @@ import { auth } from '@clerk/nextjs/server';
 import { paypalService } from '@/lib/paypal';
 import { AppDataSource } from '@/db/data-source';
 import { Order } from '@/db/entity/Order';
-import { Product } from '@/db/entity/Product';
 import { User } from '@/db/entity/User';
 
 export async function POST(request: NextRequest) {

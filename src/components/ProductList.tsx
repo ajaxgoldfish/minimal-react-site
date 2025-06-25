@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import type { ProductInfo } from "@/hooks/usePurchaseFlow";
 
@@ -89,7 +90,13 @@ export default function ProductList({
         {currentProducts.map((product) => (
           <div key={product.id} className="border rounded-lg shadow-lg overflow-hidden flex flex-col">
             <div className="h-48 bg-gray-200 flex items-center justify-center">
-              <img src={product.image} alt={product.name} className="h-24 w-24 text-gray-500" />
+              <Image 
+                src={product.image} 
+                alt={product.name} 
+                width={96} 
+                height={96} 
+                className="h-24 w-24 object-contain" 
+              />
             </div>
             <div className="p-4 flex flex-col flex-grow">
               <h2 className="text-xl font-semibold mb-2">{product.name}</h2>

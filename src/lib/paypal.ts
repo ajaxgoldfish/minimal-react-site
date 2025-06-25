@@ -190,8 +190,10 @@ export class PayPalService {
    */
   async verifyWebhookSignature(
     headers: Headers,
-    body: string,
-    webhookId: string
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _body: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _webhookId: string
   ): Promise<boolean> {
     try {
       // 获取 PayPal webhook 验证所需的头部信息

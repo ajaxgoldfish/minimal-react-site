@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const orderRepo = AppDataSource.getRepository(Order);
     const order = await orderRepo.findOne({
       where: { paypalOrderId },
-      relations: ['product'],
+      relations: ['product', 'user'],
     });
 
     if (!order) {
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证订单所有者
-    if (order.userId !== userId) {
+    // 验证订单所有者（通过 Clerk ID）
+    if (order.user.clerkId !== userId) {
       return NextResponse.json(
         { error: '无权限访问此订单' },
         { status: 403 }

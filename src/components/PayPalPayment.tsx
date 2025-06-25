@@ -1,20 +1,44 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Script from 'next/script';
+
+// 简化的 PayPal 类型定义
+interface PayPalOrder {
+  orderID: string;
+  payerID?: string;
+}
+
+interface PayPalError {
+  message: string;
+  name?: string;
+}
+
+interface PayPalPaymentData {
+  paymentDetails?: {
+    paymentId?: string;
+  };
+  success?: boolean;
+  order?: Record<string, unknown>;
+}
 
 interface PayPalPaymentProps {
   orderId: number;
   amount: number;
   currency: string;
-  onSuccess: (paymentData: any) => void;
-  onError: (error: any) => void;
+  onSuccess: (paymentData: PayPalPaymentData) => void;
+  onError: (error: PayPalError) => void;
   onCancel: () => void;
 }
 
+// 简化的 PayPal 全局类型
 declare global {
   interface Window {
-    paypal?: any;
+    paypal?: {
+      Buttons: (config: Record<string, unknown>) => {
+        render: (selector: string) => Promise<void>;
+      };
+    };
   }
 }
 
@@ -31,40 +55,7 @@ export function PayPalPayment({
   const [debug, setDebug] = useState<string>('');
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  // 检查环境变量
-  useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    console.log('PayPal Client ID:', clientId ? `${clientId.substring(0, 10)}...` : 'undefined');
-    
-    if (!clientId) {
-      setError('PayPal Client ID 未配置');
-      setIsLoading(false);
-      return;
-    }
-
-    setDebug(`Client ID: ${clientId.substring(0, 10)}...\nWaiting for SDK to load...`);
-
-    // 设置一个超时检查
-    const timeout = setTimeout(() => {
-      if (!scriptLoaded) {
-        setDebug(prev => prev + '\nSDK loading timeout - checking manually...');
-        
-        // 手动检查 PayPal 是否已加载
-        if (window.paypal) {
-          setDebug(prev => prev + '\nPayPal found in window object');
-          handleScriptLoadSuccess();
-        } else {
-          setDebug(prev => prev + '\nPayPal not found in window object');
-          setError('PayPal SDK 加载超时');
-          setIsLoading(false);
-        }
-      }
-    }, 10000); // 10秒超时
-
-    return () => clearTimeout(timeout);
-  }, [scriptLoaded]);
-
-  const initializePayPal = () => {
+  const initializePayPal = useCallback(() => {
     console.log('Initializing PayPal...');
     setDebug(prev => prev + '\nInitializing PayPal...');
 
@@ -124,13 +115,14 @@ export function PayPalPayment({
             return data.paypalOrderId;
           } catch (error) {
             console.error('Error creating PayPal order:', error);
-            setDebug(prev => prev + `\nError: ${error}`);
-            onError(error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            setDebug(prev => prev + `\nError: ${errorMessage}`);
+            onError({ message: errorMessage });
             throw error;
           }
         },
 
-        onApprove: async (data: any) => {
+        onApprove: async (data: PayPalOrder) => {
           console.log('Payment approved:', data);
           setDebug(prev => prev + `\nPayment approved: ${data.orderID}`);
           
@@ -155,14 +147,16 @@ export function PayPalPayment({
             }
           } catch (error) {
             console.error('Error capturing payment:', error);
-            onError(error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            onError({ message: errorMessage });
           }
         },
 
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           console.error('PayPal button error:', err);
-          setDebug(prev => prev + `\nPayPal error: ${err}`);
-          onError(err);
+          const errorMessage = err instanceof Error ? err.message : 'PayPal error occurred';
+          setDebug(prev => prev + `\nPayPal error: ${errorMessage}`);
+          onError({ message: errorMessage });
         },
 
         onCancel: () => {
@@ -174,22 +168,24 @@ export function PayPalPayment({
         console.log('PayPal buttons rendered successfully');
         setDebug(prev => prev + '\nPayPal buttons rendered successfully');
         setIsLoading(false);
-      }).catch((error: any) => {
+      }).catch((error: unknown) => {
         console.error('Error rendering PayPal buttons:', error);
-        setDebug(prev => prev + `\nRender error: ${error}`);
-        setError('PayPal 按钮渲染失败: ' + error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Render error';
+        setDebug(prev => prev + `\nRender error: ${errorMessage}`);
+        setError('PayPal 按钮渲染失败: ' + errorMessage);
         setIsLoading(false);
       });
 
     } catch (error) {
       console.error('Error initializing PayPal:', error);
-      setDebug(prev => prev + `\nInitialization error: ${error}`);
-      setError('初始化PayPal支付失败: ' + (error as Error).message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setDebug(prev => prev + `\nInitialization error: ${errorMessage}`);
+      setError('初始化PayPal支付失败: ' + errorMessage);
       setIsLoading(false);
     }
-  };
+  }, [orderId, onSuccess, onError, onCancel]);
 
-  const handleScriptLoadSuccess = () => {
+  const handleScriptLoadSuccess = useCallback(() => {
     console.log('PayPal SDK loaded successfully');
     setScriptLoaded(true);
     setDebug(prev => prev + '\nPayPal SDK loaded successfully');
@@ -198,18 +194,51 @@ export function PayPalPayment({
     setTimeout(() => {
       initializePayPal();
     }, 200);
-  };
+  }, [initializePayPal]);
+
+  // 检查环境变量
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+    console.log('PayPal Client ID:', clientId ? `${clientId.substring(0, 10)}...` : 'undefined');
+    
+    if (!clientId) {
+      setError('PayPal Client ID 未配置');
+      setIsLoading(false);
+      return;
+    }
+
+    setDebug(`Client ID: ${clientId.substring(0, 10)}...\nWaiting for SDK to load...`);
+
+    // 设置一个超时检查
+    const timeout = setTimeout(() => {
+      if (!scriptLoaded) {
+        setDebug(prev => prev + '\nSDK loading timeout - checking manually...');
+        
+        // 手动检查 PayPal 是否已加载
+        if (window.paypal) {
+          setDebug(prev => prev + '\nPayPal found in window object');
+          handleScriptLoadSuccess();
+        } else {
+          setDebug(prev => prev + '\nPayPal not found in window object');
+          setError('PayPal SDK 加载超时');
+          setIsLoading(false);
+        }
+      }
+    }, 10000); // 10秒超时
+
+    return () => clearTimeout(timeout);
+  }, [scriptLoaded, handleScriptLoadSuccess]);
 
   const handleScriptLoad = () => {
     handleScriptLoadSuccess();
   };
 
-  const handleScriptError = (error: any) => {
+  const handleScriptError = useCallback((error: Error) => {
     console.error('Failed to load PayPal SDK:', error);
     setError('PayPal SDK 加载失败');
-    setDebug(prev => prev + '\nPayPal SDK 加载失败: ' + error);
+    setDebug(prev => prev + '\nPayPal SDK 加载失败: ' + error.message);
     setIsLoading(false);
-  };
+  }, []);
 
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 

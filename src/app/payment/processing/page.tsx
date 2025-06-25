@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,7 +14,7 @@ interface PaymentProcessingState {
   };
 }
 
-export default function PaymentProcessingPage() {
+function PaymentProcessingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [state, setState] = useState<PaymentProcessingState>({
@@ -27,7 +27,7 @@ export default function PaymentProcessingPage() {
       try {
         const orderId = searchParams.get('orderId');
         const token = searchParams.get('token'); // PayPal订单ID
-        const payerId = searchParams.get('PayerID');
+        // const payerId = searchParams.get('PayerID'); // 暂时不使用
 
         if (!orderId || !token) {
           setState({
@@ -167,5 +167,27 @@ export default function PaymentProcessingPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function PaymentProcessingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-semibold">支付处理</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+            <p className="text-lg font-medium text-blue-600">正在加载...</p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <PaymentProcessingContent />
+    </Suspense>
   );
 } 

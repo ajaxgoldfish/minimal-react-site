@@ -2,7 +2,6 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import "reflect-metadata";
 import { AppDataSource } from "@/db/data-source";
-import { User } from "@/db/entity/User";
 import { Order } from "@/db/entity/Order";
 import { Button } from "@/components/ui/button";
 import { cancelOrder, repayOrder } from "@/app/actions";

@@ -113,6 +113,7 @@ export default function PaymentPageClient({ order }: PaymentPageClientProps) {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePayPalSuccess = (paymentData: any) => {
     setPaymentResult('success');
     setResultMessage(`支付成功完成！支付ID: ${paymentData.paymentDetails?.paymentId || 'N/A'}`);
@@ -120,6 +121,7 @@ export default function PaymentPageClient({ order }: PaymentPageClientProps) {
     // router.push(`/payment/${order.id}?success=true`);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePayPalError = (error: any) => {
     setPaymentResult('error');
     setResultMessage(error.message || '支付过程中发生错误，请重试');

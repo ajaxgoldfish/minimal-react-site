@@ -19,7 +19,7 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
     error,
     startPurchase,
     confirmPurchase,
-    handleLoginSuccess,
+    // handleLoginSuccess, // 暂时不使用
     goToPayment,
     resetFlow,
     setStep,
