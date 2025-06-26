@@ -22,15 +22,11 @@ git pull
 echo "正在安装 npm 依赖..."
 npm install
 
-# 5. 运行数据库迁移
-echo "正在运行数据库迁移..."
-npm run db:migrate
-
-# 6. 构建 Next.js 应用
+# 5. 构建 Next.js 应用
 echo "正在构建 Next.js 应用..."
 npm run build
 
-# 7. 使用 PM2 启动应用
+# 6. 使用 PM2 启动应用
 echo "正在使用 PM2 启动应用..."
 pm2 start npm --name "next-app" -- start
 
@@ -38,5 +34,5 @@ echo "✅ 部署成功!"
 echo ""
 echo "👇 应用日志:"
 
-# 8. 显示 PM2 日志
+# 7. 显示 PM2 日志
 pm2 logs next-app 
