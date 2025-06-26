@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { db } from '@/db';
 import { user } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { Button } from '@/components/ui/button';
+import { OrderActions } from '@/components/OrderActions';
 
 export default async function UserPage() {
   const authResult = await auth();
@@ -62,15 +64,18 @@ export default async function UserPage() {
           <div className="space-y-4">
             {userOrders.orders.map((order) => (
               <div key={order.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-semibold">{order.product?.name}</h3>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{order.product?.name}</h3>
                     <p className="text-gray-600">订单号: {order.id}</p>
+                    <p className="text-sm text-gray-500">
+                      创建时间: {new Date(order.createdAt).toLocaleString()}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${order.amount}</p>
+                    <p className="font-semibold text-lg">${order.amount}</p>
                     <span
-                      className={`px-2 py-1 rounded text-sm ${
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
                         order.status === 'paid'
                           ? 'bg-green-100 text-green-800'
                           : order.status === 'pending'
@@ -83,14 +88,38 @@ export default async function UserPage() {
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">
-                  创建时间: {new Date(Number(order.createdAt) * 1000).toLocaleString()}
-                </p>
+                
+                {/* 订单操作组件 */}
+                <OrderActions
+                  orderId={order.id}
+                  orderStatus={order.status}
+                  productName={order.product?.name || '商品信息不可用'}
+                  amount={order.amount}
+                />
+                
+                {/* 已取消订单的提示 */}
+                {order.status === 'cancelled' && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm text-gray-500">此订单已被取消</p>
+                  </div>
+                )}
+                
+                {/* 已支付订单的提示 */}
+                {order.status === 'paid' && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm text-green-600">✓ 支付完成，感谢您的购买</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">暂无订单</p>
+          <div className="text-center py-8">
+            <p className="text-gray-500 mb-4">暂无订单</p>
+            <Button onClick={() => window.location.href = '/products'}>
+              去购物
+            </Button>
+          </div>
         )}
       </div>
     </div>

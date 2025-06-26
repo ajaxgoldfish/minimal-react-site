@@ -7,10 +7,10 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 
-// 用户表 - 使用经典的单数表名
+// 用户表 - 使用经典的单数表名，但保持现有的列名
 export const user = sqliteTable('user', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  clerkId: text('clerk_id').notNull().unique(),
+  clerkId: text('clerkId').notNull().unique(),
   name: text('name'),
   age: integer('age'),
 });
@@ -25,18 +25,18 @@ export const product = sqliteTable('product', {
   price: real('price').notNull(),
 });
 
-// 订单表 - 使用经典的单数表名
+// 订单表 - 使用经典的单数表名，但保持现有的列名
 export const order = sqliteTable('order', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   status: text('status').default('pending').notNull(),
   amount: real('amount').notNull(),
   currency: text('currency').default('USD').notNull(),
-  paypalOrderId: text('paypal_order_id'),
-  createdAt: integer('created_at', { mode: 'timestamp' })
+  paypalOrderId: text('paypalOrderId'),
+  createdAt: integer('createdAt', { mode: 'timestamp' })
     .default(sql`(strftime('%s', 'now'))`)
     .notNull(),
-  userId: integer('user_id').references(() => user.id),
-  productId: integer('product_id').references(() => product.id),
+  userId: integer('userId').references(() => user.id),
+  productId: integer('productId').references(() => product.id),
 });
 
 // 定义关系

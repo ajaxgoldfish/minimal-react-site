@@ -102,15 +102,42 @@ export async function updateOrderStatus(orderId: string, status: string) {
 }
 
 export async function cancelOrder(orderId: string) {
+  const { auth } = await import('@clerk/nextjs/server');
+  
   try {
+    // 验证用户身份
+    const authResult = await auth();
+    if (!authResult.userId) {
+      throw new Error('用户未登录');
+    }
+
+    // 获取订单信息并验证所有者
+    const dbOrder = await db.query.order.findFirst({
+      where: eq(order.id, parseInt(orderId)),
+      with: {
+        user: true,
+      },
+    });
+
+    if (!dbOrder) {
+      throw new Error('订单不存在');
+    }
+
+    if (dbOrder.user?.clerkId !== authResult.userId) {
+      throw new Error('无权限操作此订单');
+    }
+
+    if (dbOrder.status !== 'pending') {
+      throw new Error('只能取消待支付的订单');
+    }
+
+    // 取消订单
     await db
       .update(order)
       .set({ status: 'cancelled' })
-      .where(
-        and(eq(order.id, parseInt(orderId)), eq(order.status, 'pending'))
-      );
+      .where(eq(order.id, parseInt(orderId)));
 
-    return { success: true };
+    return { success: true, message: '订单已成功取消' };
   } catch (error) {
     console.error('Error cancelling order:', error);
     throw error;
