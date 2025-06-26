@@ -1,36 +1,160 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 极简电商网站 | Minimal E-commerce Site
 
-## Getting Started
+一个基于 Next.js 15 的现代电商应用，具备完整的用户认证、商品管理和支付功能。
 
-First, run the development server:
+*A modern e-commerce application built with Next.js 15, featuring complete user authentication, product management, and payment functionality.*
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+[English](#english) | 中文
+
+## 技术栈
+
+- **框架**: Next.js 15 (App Router)
+- **语言**: TypeScript
+- **数据库**: SQLite + Drizzle ORM
+- **认证**: Clerk
+- **支付**: PayPal
+- **UI**: Tailwind CSS + shadcn/ui
+- **部署**: PM2 + Shell Scripts
+
+## 项目结构
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API 路由
+│   │   ├── payments/      # PayPal 支付接口
+│   │   └── products/      # 商品接口
+│   ├── products/          # 商品页面
+│   ├── payment/           # 支付页面
+│   ├── user/              # 用户中心
+│   └── sign-in/           # 登录页面
+├── components/            # React 组件
+│   ├── ui/                # 基础 UI 组件
+│   ├── ProductList.tsx    # 商品列表
+│   ├── PurchaseModal.tsx  # 购买弹窗
+│   └── OrderActions.tsx   # 订单操作
+├── db/                    # 数据库
+│   ├── schema.ts          # 数据表结构
+│   └── index.ts           # 数据库连接
+├── hooks/                 # 自定义 Hooks
+└── lib/                   # 工具函数
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 核心功能
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- ✅ 用户注册/登录 (Clerk)
+- ✅ 商品展示与分类
+- ✅ 购物车与订单管理
+- ✅ 订单状态控制 (待支付/已支付/已取消)
+- ✅ PayPal 支付集成
+- ✅ 响应式设计
+- ✅ TypeScript 类型安全
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 快速开始
 
-## Learn More
+### 1. 安装依赖
+```bash
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. 环境配置
+创建 `.env.local` 文件：
+```env
+# Clerk 认证
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_key
+CLERK_SECRET_KEY=your_secret
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# PayPal
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_client_id
+PAYPAL_CLIENT_SECRET=your_secret
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. 数据库初始化
+```bash
+npm run db:push     # 创建数据表
+npm run db:seed     # 初始化数据
+```
 
-## Deploy on Vercel
+### 4. 启动开发服务器
+```bash
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+访问 [http://localhost:3000](http://localhost:3000)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 生产部署
+
+使用包含的部署脚本：
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+## 数据库结构
+
+- **user**: 用户信息
+- **product**: 商品信息  
+- **order**: 订单信息
+
+关系：`user` 1:N `order` N:1 `product`
+
+---
+
+## English
+
+A modern e-commerce application built with Next.js 15, featuring complete user authentication, product management, and payment functionality.
+
+### Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Database**: SQLite + Drizzle ORM
+- **Authentication**: Clerk
+- **Payment**: PayPal
+- **UI**: Tailwind CSS + shadcn/ui
+- **Deployment**: PM2 + Shell Scripts
+
+### Core Features
+
+- ✅ User Registration/Login (Clerk)
+- ✅ Product Display & Categorization
+- ✅ Shopping Cart & Order Management
+- ✅ Order Status Control (Pending/Paid/Cancelled)
+- ✅ PayPal Payment Integration
+- ✅ Responsive Design
+- ✅ TypeScript Type Safety
+
+### Quick Start
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Environment Setup**
+   Create `.env.local`:
+   ```env
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_key
+   CLERK_SECRET_KEY=your_secret
+   NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_client_id
+   PAYPAL_CLIENT_SECRET=your_secret
+   ```
+
+3. **Database Setup**
+   ```bash
+   npm run db:push
+   npm run db:seed
+   ```
+
+4. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+### Production Deployment
+
+Use the included deployment script:
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
