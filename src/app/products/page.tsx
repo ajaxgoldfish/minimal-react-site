@@ -1,19 +1,17 @@
-import "reflect-metadata";
-import { AppDataSource } from "@/db/data-source";
-import { Product } from "@/db/entity/Product";
-import ProductList from "@/components/ProductList";
+import ProductList from '@/components/ProductList';
+import { db } from '@/db';
+import { product } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const revalidate = 60; // 每60秒重新验证一次数据
 
 async function getProducts(category?: string) {
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
+  if (category && category !== '所有商品') {
+    return await db.query.product.findMany({
+      where: eq(product.category, category),
+    });
   }
-  const productRepository = AppDataSource.getRepository(Product);
-  if (category && category !== "所有商品") {
-    return productRepository.find({ where: { category } });
-  }
-  return productRepository.find();
+  return await db.query.product.findMany();
 }
 
 export default async function ProductsPage({
@@ -23,11 +21,10 @@ export default async function ProductsPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const category =
-    typeof resolvedSearchParams?.category === "string"
+    typeof resolvedSearchParams?.category === 'string'
       ? resolvedSearchParams.category
-      : "所有商品";
+      : '所有商品';
   const products = await getProducts(category);
-  const plainProducts = JSON.parse(JSON.stringify(products));
 
-  return <ProductList products={plainProducts} selectedCategory={category} />;
+  return <ProductList products={products} selectedCategory={category} />;
 } 

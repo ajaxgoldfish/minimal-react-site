@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { createOrderForModal } from '@/app/actions';
+import { createOrder } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 
 export type PurchaseStep = 'idle' | 'login' | 'confirm' | 'payment' | 'loading' | 'success' | 'error';
@@ -69,11 +69,8 @@ export const usePurchaseFlow = () => {
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('productId', selectedProduct.id);
-      
-      // 调用专门为Modal设计的服务器action
-      const result = await createOrderForModal(formData);
+      // 调用创建订单的服务器action
+      const result = await createOrder(selectedProduct.id);
       
       if (result.success && result.order) {
         setCreatedOrder(result.order);

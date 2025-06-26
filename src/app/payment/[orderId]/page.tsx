@@ -1,24 +1,29 @@
-import "reflect-metadata";
-import { Order } from "@/db/entity/Order";
-import { notFound } from "next/navigation";
-import PaymentPageClient from "./PaymentPageClient";
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+import PaymentPageClient from './PaymentPageClient';
+import { db } from '@/db';
+import { order } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
-async function getOrder(orderId: number) {
-  try {
-    const { AppDataSource } = await import("@/db/data-source");
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-    }
-    const orderRepository = AppDataSource.getRepository(Order);
-    const order = await orderRepository.findOne({
-      where: { id: orderId },
-      relations: ["product", "user"],
-    });
-    return order;
-  } catch (error) {
-    console.error("Error fetching order:", error);
+async function getOrderDetails(orderId: string, clerkId: string) {
+  const dbOrder = await db.query.order.findFirst({
+    where: eq(order.id, parseInt(orderId)),
+    with: {
+      user: true,
+      product: true,
+    },
+  });
+
+  if (!dbOrder || !dbOrder.user || !dbOrder.product) {
     return null;
   }
+
+  // 验证订单所有者
+  if (dbOrder.user.clerkId !== clerkId) {
+    return null;
+  }
+
+  return dbOrder;
 }
 
 export default async function PaymentPage({
@@ -26,29 +31,42 @@ export default async function PaymentPage({
 }: {
   params: Promise<{ orderId: string }>;
 }) {
+  const authResult = await auth();
+  if (!authResult.userId) {
+    redirect('/sign-in');
+  }
+
   const resolvedParams = await params;
-  const orderId = parseInt(resolvedParams.orderId);
-  
-  if (isNaN(orderId)) {
-    notFound();
-  }
-  
-  const order = await getOrder(orderId);
-
-  if (!order) {
-    notFound();
+  const orderDetails = await getOrderDetails(resolvedParams.orderId, authResult.userId);
+  if (!orderDetails) {
+    redirect('/user');
   }
 
-  // 转换数据格式以匹配客户端组件的接口
-  const orderData = {
-    id: order.id,
-    amount: Number(order.amount),
-    currency: order.currency || 'USD',
-    status: order.status,
-    product: {
-      name: order.product.name,
-    },
-  };
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">支付订单</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* 订单详情 */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">订单详情</h2>
+          <div className="border rounded-lg p-4">
+            <p className="text-sm text-gray-500">订单号: {orderDetails.id}</p>
+            <h3 className="text-lg font-semibold mt-2">
+              {orderDetails.product!.name}
+            </h3>
+            <p className="text-gray-600">{orderDetails.product!.description}</p>
+            <p className="text-2xl font-bold mt-4">
+              ${orderDetails.amount.toFixed(2)}
+            </p>
+          </div>
+        </div>
 
-  return <PaymentPageClient order={orderData} />;
+        {/* 支付表单 */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">支付方式</h2>
+          <PaymentPageClient order={orderDetails} />
+        </div>
+      </div>
+    </div>
+  );
 } 

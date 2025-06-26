@@ -11,9 +11,24 @@ interface Order {
   amount: number;
   currency: string;
   status: string;
+  createdAt: Date;
+  paypalOrderId: string | null;
+  userId: number | null;
+  productId: number | null;
+  user: {
+    id: number;
+    clerkId: string;
+    name: string | null;
+    age: number | null;
+  } | null;
   product: {
+    id: number;
     name: string;
-  };
+    description: string;
+    image: string;
+    category: string;
+    price: number;
+  } | null;
 }
 
 interface PaymentPageClientProps {
@@ -38,7 +53,7 @@ export default function PaymentPageClient({ order }: PaymentPageClientProps) {
           <h1 className="text-2xl font-bold text-green-600 mb-4">支付成功！</h1>
           <div className="space-y-2 text-gray-600 mb-6">
             <p>订单号: #{order.id}</p>
-            <p>商品: {order.product.name}</p>
+            <p>商品: {order.product?.name || '商品信息不可用'}</p>
             <p>金额: {order.currency} {order.amount.toFixed(2)}</p>
           </div>
           <Button onClick={() => router.push('/products')} className="w-full">
@@ -148,7 +163,7 @@ export default function PaymentPageClient({ order }: PaymentPageClientProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">商品:</span>
-              <span className="font-semibold">{order.product.name}</span>
+              <span className="font-semibold">{order.product?.name || '商品信息不可用'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">状态:</span>

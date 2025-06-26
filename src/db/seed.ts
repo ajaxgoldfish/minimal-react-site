@@ -1,81 +1,95 @@
-import "reflect-metadata";
-import { AppDataSource } from "./data-source";
-import { Product } from "./entity/Product";
+import { db } from './index';
+import { product } from './schema';
 
-const productsData = [
-    {
-      id: 1,
-      name: "高性能笔记本电脑",
-      description: "搭载最新一代处理器，适用于专业工作和游戏。",
-      image: "/file.svg",
-      category: "一类",
-      price: 999.99,
-    },
-    {
-      id: 2,
-      name: "无线降噪耳机",
-      description: "沉浸式音效体验，长达30小时电池续航。",
-      image: "/globe.svg",
-      category: "一类",
-      price: 249.99,
-    },
-    {
-      id: 3,
-      name: "智能运动手表",
-      description: "全天候健康监测，多种运动模式可选。",
-      image: "/window.svg",
-      category: "二类",
-      price: 199.99,
-    },
-    {
-      id: 4,
-      name: "4K超高清显示器",
-      description: "色彩精准，细节丰富，为创作者和设计师打造。",
-      image: "/file.svg",
-      category: "三类",
-      price: 499.99,
-    },
-    {
-      id: 5,
-      name: "人体工学办公椅",
-      description: "舒适支撑，缓解久坐疲劳，提升工作效率。",
-      image: "/globe.svg",
-      category: "三类",
-      price: 399.99,
-    },
-    {
-      id: 6,
-      name: "便携咖啡机",
-      description: "随时随地享用香醇咖啡，简单易用。",
-      image: "/window.svg",
-      category: "四类",
-      price: 89.99,
-    },
-    {
-      id: 7,
-      name: "多功能登山包",
-      description: "轻便耐磨，大容量设计，满足户外探险需求。",
-      image: "/file.svg",
-      category: "五类",
-      price: 129.99,
-    },
-  ];
-  
+const sampleProducts = [
+  {
+    name: 'iPhone 15 Pro',
+    description: '最新款iPhone，配备A17 Pro芯片，钛金属机身，三摄系统',
+    image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&h=500&fit=crop',
+    category: '电子产品',
+    price: 999.99,
+  },
+  {
+    name: 'MacBook Air M3',
+    description: '全新M3芯片，超长续航，轻薄便携',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&h=500&fit=crop',
+    category: '电子产品',
+    price: 1299.99,
+  },
+  {
+    name: 'AirPods Pro',
+    description: '主动降噪，空间音频，无线充电',
+    image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=500&h=500&fit=crop',
+    category: '电子产品',
+    price: 249.99,
+  },
+  {
+    name: '运动鞋',
+    description: '舒适透气，适合日常运动和休闲',
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop',
+    category: '服装',
+    price: 89.99,
+  },
+  {
+    name: '咖啡豆',
+    description: '精选阿拉比卡咖啡豆，浓郁香醇',
+    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500&h=500&fit=crop',
+    category: '食品',
+    price: 24.99,
+  },
+  {
+    name: '护肤套装',
+    description: '温和保湿，适合各种肌肤类型',
+    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&h=500&fit=crop',
+    category: '美妆',
+    price: 79.99,
+  },
+  {
+    name: '瑜伽垫',
+    description: '防滑环保，厚度适中，适合各种瑜伽练习',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&h=500&fit=crop',
+    category: '运动',
+    price: 39.99,
+  },
+];
+
 async function seed() {
-  await AppDataSource.initialize();
-  console.log("Database connection initialized.");
+  console.log('开始播种数据...');
 
-  const productRepository = AppDataSource.getRepository(Product);
+  try {
+    // 检查是否已有数据
+    const existingProducts = await db.query.product.findMany();
+    
+    if (existingProducts.length === 0) {
+      console.log('插入示例商品...');
+      
+      for (const productData of sampleProducts) {
+        await db.insert(product).values(productData);
+      }
+      
+      console.log(`成功插入 ${sampleProducts.length} 个商品`);
+    } else {
+      console.log(`数据库中已有 ${existingProducts.length} 个商品，跳过播种`);
+    }
 
-  // 清空表以避免重复插入
-  await productRepository.clear();
-  console.log("Product table cleared.");
+    // 显示最终统计
+    const finalProducts = await db.query.product.findMany();
+    console.log(`数据库中共有 ${finalProducts.length} 个商品`);
 
-  await productRepository.save(productsData);
-  console.log("Products have been seeded.");
-
-  await AppDataSource.destroy();
-  console.log("Database connection closed.");
+  } catch (error) {
+    console.error('播种数据时出错:', error);
+  }
 }
 
-seed().catch((error) => console.log("Seeding error: ", error)); 
+// 如果直接运行此文件，则执行播种
+if (require.main === module) {
+  seed().then(() => {
+    console.log('播种完成');
+    process.exit(0);
+  }).catch((error) => {
+    console.error('播种失败:', error);
+    process.exit(1);
+  });
+}
+
+export { seed }; 

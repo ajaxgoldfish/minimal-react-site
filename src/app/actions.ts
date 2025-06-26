@@ -1,174 +1,126 @@
 'use server';
 
-import "reflect-metadata";
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { AppDataSource } from "@/db/data-source";
-import { User } from "@/db/entity/User";
-import { Product } from "@/db/entity/Product";
-import { Order } from "@/db/entity/Order";
+import { redirect } from 'next/navigation';
+import { db } from '@/db';
+import { user, product, order } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function getUsers() {
   try {
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-      console.log("Data Source has been initialized!");
-
-      const userRepository = AppDataSource.getRepository(User);
-      const userCount = await userRepository.count();
-      if (userCount === 0) {
-        console.log("No users found. Seeding database...");
-        await userRepository.save([
-          { name: "Alice", age: 25 },
-          { name: "Bob", age: 30 },
-          { name: "Charlie", age: 35 },
-        ]);
-        console.log("Database has been seeded.");
-      }
-    }
-    
-    const users = await AppDataSource.manager.find(User);
-    console.log("Fetched users:", users);
-    return JSON.parse(JSON.stringify(users));
+    const allUsers = await db.query.user.findMany();
+    console.log('Fetched users:', allUsers);
+    return allUsers;
   } catch (error) {
-    console.error("Error during data source operation:", error);
-    if (AppDataSource.isInitialized) {
-        await AppDataSource.destroy();
-    }
-    return [];
+    console.error('Error fetching users:', error);
+    throw error;
   }
 }
 
-// 专门为Modal流程设计的创建订单函数
-export async function createOrderForModal(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+export async function createOrder(productId: string) {
+  const { auth } = await import('@clerk/nextjs/server');
+  const { currentUser } = await import('@clerk/nextjs/server');
 
-  const productId = formData.get("productId") as string;
-  if (!productId) {
-    throw new Error("Product ID is required");
-  }
-
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-  }
-
-  const userRepository = AppDataSource.getRepository(User);
-  const productRepository = AppDataSource.getRepository(Product);
-  const orderRepository = AppDataSource.getRepository(Order);
-
-  // 查找或创建用户
-  let dbUser = await userRepository.findOne({ where: { clerkId: userId } });
-  if (!dbUser) {
-    const user = await currentUser();
-    if (!user) {
-        throw new Error("无法获取用户详细信息。")
+  try {
+    // 验证用户身份
+    const authResult = await auth();
+    if (!authResult.userId) {
+      throw new Error('用户未登录。');
     }
-    dbUser = userRepository.create({
-      clerkId: user.id,
-      name: user.firstName || user.username || "",
+
+    // 查找或创建用户
+    let dbUser = await db.query.user.findFirst({
+      where: eq(user.clerkId, authResult.userId),
     });
-    await userRepository.save(dbUser);
-  }
 
-  // 查找商品
-  const product = await productRepository.findOne({
-    where: { id: parseInt(productId) },
-  });
-  if (!product) {
-    throw new Error("Product not found");
-  }
-
-  // 创建订单
-  const order = orderRepository.create({
-    user: dbUser,
-    product: product,
-    amount: product.price,
-    status: "pending",
-  });
-
-  await orderRepository.save(order);
-
-  // 返回订单信息而不是重定向
-  return {
-    success: true,
-    order: {
-      id: order.id,
-      amount: order.amount,
-      status: order.status,
-      product: {
-        id: product.id,
-        name: product.name,
-        price: product.price,
+    if (!dbUser) {
+      const currentUserData = await currentUser();
+      if (!currentUserData) {
+        throw new Error('无法获取用户详细信息。');
       }
+      const [newUser] = await db
+        .insert(user)
+        .values({
+          clerkId: currentUserData.id,
+          name: currentUserData.firstName || currentUserData.username || '',
+        })
+        .returning();
+      dbUser = newUser;
     }
-  };
+
+    // 查找商品
+    const dbProduct = await db.query.product.findFirst({
+      where: eq(product.id, parseInt(productId)),
+    });
+
+    if (!dbProduct) {
+      throw new Error('Product not found');
+    }
+
+    // 创建订单
+    const [newOrder] = await db
+      .insert(order)
+      .values({
+        userId: dbUser.id,
+        productId: dbProduct.id,
+        amount: dbProduct.price,
+        status: 'pending',
+      })
+      .returning();
+
+    return {
+      success: true,
+      order: {
+        id: newOrder.id,
+        amount: newOrder.amount,
+        status: newOrder.status,
+        product: {
+          id: dbProduct.id,
+          name: dbProduct.name,
+          price: dbProduct.price,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    throw error;
+  }
 }
 
-export async function confirmPayment(formData: FormData) {
-  const orderId = formData.get("orderId") as string;
-  if (!orderId) {
-    throw new Error("Order ID is required");
+export async function updateOrderStatus(orderId: string, status: string) {
+  try {
+    const [updatedOrder] = await db
+      .update(order)
+      .set({ status: status as 'pending' | 'paid' | 'cancelled' })
+      .where(eq(order.id, parseInt(orderId)))
+      .returning();
+
+    return { success: true, order: updatedOrder };
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    throw error;
   }
-
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-  }
-  const orderRepository = AppDataSource.getRepository(Order);
-  
-  const order = await orderRepository.findOne({
-    where: { id: parseInt(orderId) },
-  });
-
-  if (!order) {
-    throw new Error("Order not found");
-  }
-
-  order.status = "paid";
-  await orderRepository.save(order);
-
-  // 支付成功后，重定向到用户中心
-  redirect("/user");
 }
 
-export async function cancelOrder(formData: FormData) {
-  const orderId = formData.get("orderId") as string;
-  if (!orderId) {
-    throw new Error("Order ID is required");
+export async function cancelOrder(orderId: string) {
+  try {
+    await db
+      .update(order)
+      .set({ status: 'cancelled' })
+      .where(
+        and(eq(order.id, parseInt(orderId)), eq(order.status, 'pending'))
+      );
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    throw error;
   }
-
-  // 可以在这里添加额外的用户权限校验，确保只有订单所有者才能取消
-  // const { userId } = auth(); ...
-
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-  }
-  const orderRepository = AppDataSource.getRepository(Order);
-  
-  const order = await orderRepository.findOne({
-    where: { id: parseInt(orderId) },
-  });
-
-  if (!order) {
-    throw new Error("Order not found");
-  }
-
-  // 只能取消待支付的订单
-  if (order.status === 'pending') {
-    order.status = "cancelled";
-    await orderRepository.save(order);
-  }
-
-  // 操作完成后刷新当前页面
-  redirect("/user");
 }
 
 export async function repayOrder(formData: FormData) {
-  const orderId = formData.get("orderId") as string;
+  const orderId = formData.get('orderId') as string;
   if (!orderId) {
-    throw new Error("Order ID is required");
+    throw new Error('Order ID is required');
   }
   redirect(`/payment/${orderId}`);
 } 

@@ -1,115 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { getPayPalService } from '@/lib/paypal';
-import { AppDataSource } from '@/db/data-source';
-import { Order } from '@/db/entity/Order';
+import { db } from '@/db';
+import { order } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { auth } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // 检查用户认证
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json(
-        { error: '需要登录才能完成支付' },
-        { status: 401 }
-      );
-    }
-
     const { paypalOrderId } = await request.json();
 
     if (!paypalOrderId) {
       return NextResponse.json(
-        { error: '缺少PayPal订单ID' },
+        { error: 'PayPal 订单ID是必需的' },
         { status: 400 }
       );
     }
 
-    // 初始化数据库连接
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
+    // 验证用户身份
+    const authResult = await auth();
+    if (!authResult.userId) {
+      return NextResponse.json({ error: '用户未登录' }, { status: 401 });
     }
 
-    // 查找本地订单
-    const orderRepo = AppDataSource.getRepository(Order);
-    const order = await orderRepo.findOne({
-      where: { paypalOrderId },
-      relations: ['product', 'user'],
+    // 获取订单信息
+    const dbOrder = await db.query.order.findFirst({
+      where: eq(order.paypalOrderId, paypalOrderId),
+      with: {
+        user: true,
+        product: true,
+      },
     });
 
-    if (!order) {
-      return NextResponse.json(
-        { error: '订单不存在' },
-        { status: 404 }
-      );
+    if (!dbOrder) {
+      return NextResponse.json({ error: '订单不存在' }, { status: 404 });
     }
 
-    // 验证订单所有者（通过 Clerk ID）
-    if (order.user.clerkId !== userId) {
-      return NextResponse.json(
-        { error: '无权限访问此订单' },
-        { status: 403 }
-      );
+    if (dbOrder.user?.clerkId !== authResult.userId) {
+      return NextResponse.json({ error: '无权限访问此订单' }, { status: 403 });
     }
 
-    // 验证订单状态
-    if (order.status === 'paid') {
-      return NextResponse.json(
-        { 
-          success: true, 
-          message: '订单已支付',
-          order: {
-            id: order.id,
-            status: order.status,
-            amount: order.amount,
-            currency: order.currency,
-          }
-        }
-      );
-    }
-
-    if (order.status !== 'pending') {
-      return NextResponse.json(
-        { error: '订单状态无效' },
-        { status: 400 }
-      );
-    }
-
-    // 捕获 PayPal 付款
+    // 捕获 PayPal 支付
     const paypalService = getPayPalService();
     const captureResult = await paypalService.capturePayment(paypalOrderId);
 
-    if (!captureResult || !captureResult.success) {
-      console.error('PayPal capture failed:', captureResult);
+    if (!captureResult.success) {
       return NextResponse.json(
-        { error: '捕获PayPal支付失败' },
+        { error: 'PayPal 支付捕获失败' },
         { status: 500 }
       );
     }
 
     // 更新订单状态
-    order.status = 'paid';
-    await orderRepo.save(order);
+    const [updatedOrder] = await db
+      .update(order)
+      .set({ status: 'paid' })
+      .where(eq(order.id, dbOrder.id))
+      .returning();
 
     return NextResponse.json({
       success: true,
-      message: '支付成功',
-      order: {
-        id: order.id,
-        status: order.status,
-        amount: order.amount,
-        currency: order.currency,
-      },
-      paymentDetails: {
-        paymentId: captureResult.paymentId,
-        status: captureResult.status,
-        amount: captureResult.amount,
-      },
+      order: updatedOrder,
     });
-
   } catch (error) {
-    console.error('Capture PayPal payment error:', error);
+    console.error('捕获 PayPal 支付时出错:', error);
     return NextResponse.json(
-      { error: '捕获PayPal支付时发生错误' },
+      { error: '内部服务器错误' },
       { status: 500 }
     );
   }
