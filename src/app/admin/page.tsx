@@ -12,7 +12,17 @@ export default async function AdminDashboard() {
   try {
     await requireAdmin();
   } catch (error) {
-    redirect('/user'); // 非管理员重定向到用户页面
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">无权限访问</h1>
+          <p className="text-gray-600 mb-6">抱歉，您没有访问管理员页面的权限。</p>
+          <Link href="/user">
+            <Button>返回用户中心</Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   // 获取统计数据
