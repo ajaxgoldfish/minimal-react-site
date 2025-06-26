@@ -1,5 +1,8 @@
+'use client';
+
 import Link from "next/link";
 import { Package2, Shield, LucideIcon } from "lucide-react";
+import { useUser } from '@clerk/nextjs';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -9,7 +12,6 @@ import {
 } from "@/components/ui/navigation-menu";
 import { MobileMenu } from "./MobileMenu";
 import { AuthButtons } from "./AuthButtons";
-import { getCurrentUserWithRole } from "@/lib/auth";
 
 // 菜单项类型定义
 interface MenuItem {
@@ -18,9 +20,8 @@ interface MenuItem {
   icon?: LucideIcon;
 }
 
-export default async function Navbar() {
-  // 获取当前用户角色
-  const currentUser = await getCurrentUserWithRole();
+export default function ClientNavbar() {
+  const { user, isLoaded } = useUser();
   
   // 基础菜单项
   const baseMenuItems: MenuItem[] = [
@@ -32,13 +33,17 @@ export default async function Navbar() {
   // 角色相关的菜单项
   const roleMenuItems: MenuItem[] = [];
   
-  if (currentUser) {
-    if (currentUser.role === 'admin') {
+  if (isLoaded && user) {
+    // 这里我们可以从 user.publicMetadata 中获取角色
+    // 或者调用客户端API来获取用户角色
+    const userRole = user.publicMetadata?.role as string;
+    
+    if (userRole === 'admin') {
       roleMenuItems.push(
         { name: "管理后台", href: "/admin", icon: Shield },
         { name: "订单管理", href: "/admin/orders" },
       );
-    } else {
+    } else if (user) {
       roleMenuItems.push(
         { name: "订单中心", href: "/user" },
       );
@@ -86,10 +91,17 @@ export default async function Navbar() {
         </div>
 
         {/* User Role Badge (optional) */}
-        {currentUser && currentUser.role === 'admin' && (
+        {isLoaded && user && user.publicMetadata?.role === 'admin' && (
           <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
             <Shield className="h-3 w-3" />
             管理员
+          </div>
+        )}
+
+        {/* Loading skeleton for user section */}
+        {!isLoaded && (
+          <div className="flex items-center gap-2 animate-pulse">
+            <div className="h-8 w-20 bg-gray-200 rounded"></div>
           </div>
         )}
 

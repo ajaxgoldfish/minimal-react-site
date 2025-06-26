@@ -1,4 +1,5 @@
-'use server';
+// 这个页面需要权限检查，使用动态渲染
+export const dynamic = 'force-dynamic';
 
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';

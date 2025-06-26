@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 
+// 这个页面需要权限检查，使用动态渲染
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboard() {
   // 权限检查：要求管理员权限
   try {
