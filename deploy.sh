@@ -14,9 +14,10 @@ pm2 delete next-app || true
 echo "正在删除 .next 文件夹..."
 rm -rf .next
 
-# 3. 从 Git 拉取最新的代码
-echo "正在从 Git 拉取最新代码..."
-git pull
+# 3. 从 Git 拉取最新的代码（放弃本地改动）
+echo "正在重置本地改动并拉取最新代码..."
+git fetch origin
+git reset --hard origin/main
 
 # 4. 安装 npm 依赖
 echo "正在安装 npm 依赖..."
