@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/db';
 import { user, product, order } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export async function getUsers() {
   try {
