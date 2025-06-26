@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { X, ShoppingCart, CreditCard, CheckCircle, AlertCircle, Loader2, LogIn } from 'lucide-react';
+import { X, CreditCard, CheckCircle, AlertCircle, Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePurchaseFlow, type ProductInfo } from '@/hooks/usePurchaseFlow';
 
