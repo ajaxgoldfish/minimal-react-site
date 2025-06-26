@@ -2,9 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/db';
-import { user, product, order } from '@/db/schema';
+import { product, order } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { requireAuth, getCurrentUserWithRole } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 
 export async function getUsers() {
   try {

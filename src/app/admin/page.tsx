@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/db';
 import { order, product, user } from '@/db/schema';
@@ -11,7 +10,7 @@ export default async function AdminDashboard() {
   // 权限检查：要求管理员权限
   try {
     await requireAdmin();
-  } catch (error) {
+  } catch {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto text-center">

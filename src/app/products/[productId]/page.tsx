@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { PurchaseModal } from '@/components/PurchaseModal';
 
 interface Product {
@@ -73,11 +74,12 @@ export default function ProductPage({
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* 商品图片 */}
-          <div className="aspect-square">
-            <img
+          <div className="aspect-square relative">
+            <Image
               src={product.image}
               alt={product.name}
-              className="w-full h-full object-cover rounded-lg"
+              fill
+              className="object-cover rounded-lg"
             />
           </div>
 
