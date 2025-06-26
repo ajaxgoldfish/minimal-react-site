@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package2 } from "lucide-react";
+import { Package2, Shield, LucideIcon } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -9,14 +9,43 @@ import {
 } from "@/components/ui/navigation-menu";
 import { MobileMenu } from "./MobileMenu";
 import { AuthButtons } from "./AuthButtons";
+import { getCurrentUserWithRole } from "@/lib/auth";
 
-export default function Navbar() {
-  const menuItems = [
+// 菜单项类型定义
+interface MenuItem {
+  name: string;
+  href: string;
+  icon?: LucideIcon;
+}
+
+export default async function Navbar() {
+  // 获取当前用户角色
+  const currentUser = await getCurrentUserWithRole();
+  
+  // 基础菜单项
+  const baseMenuItems: MenuItem[] = [
     { name: "首页", href: "/" },
     { name: "商品展示", href: "/products" },
     { name: "联系我们", href: "/contact" },
-    { name: "订单中心", href: "/user" },
   ];
+
+  // 角色相关的菜单项
+  const roleMenuItems: MenuItem[] = [];
+  
+  if (currentUser) {
+    if (currentUser.role === 'admin') {
+      roleMenuItems.push(
+        { name: "管理后台", href: "/admin", icon: Shield },
+        { name: "订单管理", href: "/admin/orders" },
+      );
+    } else {
+      roleMenuItems.push(
+        { name: "订单中心", href: "/user" },
+      );
+    }
+  }
+
+  const menuItems: MenuItem[] = [...baseMenuItems, ...roleMenuItems];
 
   return (
     <header className="sticky top-0 flex h-16 items-center px-4 md:px-6 border-b bg-background">
@@ -38,7 +67,10 @@ export default function Navbar() {
               <NavigationMenuItem key={item.name}>
                 <NavigationMenuLink asChild>
                   <Link href={item.href} className={navigationMenuTriggerStyle()}>
-                    {item.name}
+                    <div className="flex items-center gap-2">
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      {item.name}
+                    </div>
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -52,6 +84,14 @@ export default function Navbar() {
                 <Package2 className="h-6 w-6" />
             </Link>
         </div>
+
+        {/* User Role Badge (optional) */}
+        {currentUser && currentUser.role === 'admin' && (
+          <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+            <Shield className="h-3 w-3" />
+            管理员
+          </div>
+        )}
 
         {/* Clerk Auth Buttons */}
         <div className="flex items-center gap-2 ml-auto md:ml-0">

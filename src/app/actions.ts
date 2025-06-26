@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { db } from '@/db';
 import { user, product, order } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireAuth, getCurrentUserWithRole } from '@/lib/auth';
 
 export async function getUsers() {
   try {
@@ -17,35 +18,9 @@ export async function getUsers() {
 }
 
 export async function createOrder(productId: string) {
-  const { auth } = await import('@clerk/nextjs/server');
-  const { currentUser } = await import('@clerk/nextjs/server');
-
   try {
-    // 验证用户身份
-    const authResult = await auth();
-    if (!authResult.userId) {
-      throw new Error('用户未登录。');
-    }
-
-    // 查找或创建用户
-    let dbUser = await db.query.user.findFirst({
-      where: eq(user.clerkId, authResult.userId),
-    });
-
-    if (!dbUser) {
-      const currentUserData = await currentUser();
-      if (!currentUserData) {
-        throw new Error('无法获取用户详细信息。');
-      }
-      const [newUser] = await db
-        .insert(user)
-        .values({
-          clerkId: currentUserData.id,
-          name: currentUserData.firstName || currentUserData.username || '',
-        })
-        .returning();
-      dbUser = newUser;
-    }
+    // 使用新的权限系统
+    const currentUser = await requireAuth();
 
     // 查找商品
     const dbProduct = await db.query.product.findFirst({
@@ -60,7 +35,7 @@ export async function createOrder(productId: string) {
     const [newOrder] = await db
       .insert(order)
       .values({
-        userId: dbUser.id,
+        userId: currentUser.id,
         productId: dbProduct.id,
         amount: dbProduct.price,
         status: 'pending',
@@ -102,14 +77,9 @@ export async function updateOrderStatus(orderId: string, status: string) {
 }
 
 export async function cancelOrder(orderId: string) {
-  const { auth } = await import('@clerk/nextjs/server');
-  
   try {
     // 验证用户身份
-    const authResult = await auth();
-    if (!authResult.userId) {
-      throw new Error('用户未登录');
-    }
+    const currentUser = await requireAuth();
 
     // 获取订单信息并验证所有者
     const dbOrder = await db.query.order.findFirst({
@@ -123,7 +93,8 @@ export async function cancelOrder(orderId: string) {
       throw new Error('订单不存在');
     }
 
-    if (dbOrder.user?.clerkId !== authResult.userId) {
+    // 验证订单所有权（管理员可以操作所有订单）
+    if (currentUser.role !== 'admin' && dbOrder.userId !== currentUser.id) {
       throw new Error('无权限操作此订单');
     }
 

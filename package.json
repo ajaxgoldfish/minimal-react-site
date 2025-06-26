@@ -7,9 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node -r esbuild-register src/db/seed.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "node -r esbuild-register src/db/migrate.ts"
+    "seed": "node -r esbuild-register src/db/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.23.0",

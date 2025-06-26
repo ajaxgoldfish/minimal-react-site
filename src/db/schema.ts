@@ -13,6 +13,7 @@ export const user = sqliteTable('user', {
   clerkId: text('clerkId').notNull().unique(),
   name: text('name'),
   age: integer('age'),
+  role: text('role').default('customer').notNull(),
 });
 
 // 商品表 - 使用经典的单数表名
