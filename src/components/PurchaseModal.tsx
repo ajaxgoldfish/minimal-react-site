@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from 'react';
-import { X, ShoppingCart, CreditCard, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { X, ShoppingCart, CreditCard, CheckCircle, AlertCircle, Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SignIn } from '@clerk/nextjs';
 import { usePurchaseFlow, type ProductInfo } from '@/hooks/usePurchaseFlow';
 
 interface PurchaseModalProps {
@@ -19,7 +18,6 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
     error,
     startPurchase,
     confirmPurchase,
-    // handleLoginSuccess, // 暂时不使用
     goToPayment,
     resetFlow,
     setStep,
@@ -47,6 +45,11 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
     resetFlow();
   };
 
+  const handleGoToLogin = () => {
+    handleClose();
+    window.location.href = '/sign-in';
+  };
+
   const renderStepContent = () => {
     switch (step) {
       case 'loading':
@@ -60,39 +63,25 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
 
       case 'login':
         return (
-          <div className="text-center">
-            <div className="mb-6">
-              <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-              <h3 className="text-xl font-semibold mb-2">请先登录</h3>
-              <p className="text-gray-600 mb-4">登录后即可购买商品</p>
-            </div>
+          <div className="text-center py-6">
+            <LogIn className="h-16 w-16 mx-auto mb-6 text-blue-600" />
+            <h3 className="text-xl font-semibold mb-3">需要登录</h3>
+            <p className="text-gray-600 mb-6">
+              请先登录您的账户，然后再购买商品
+            </p>
             
-            <div className="flex justify-center mb-6">
-              <div className="w-full max-w-sm">
-                <SignIn 
-                  afterSignInUrl={window.location.href}
-                  routing="hash"
-                  signUpUrl="/sign-up"
-                  appearance={{
-                    elements: {
-                      rootBox: "mx-auto",
-                      card: "shadow-none border-0 bg-transparent",
-                      headerTitle: "text-lg font-semibold text-center",
-                      headerSubtitle: "text-sm text-gray-600 text-center",
-                      socialButtonsBlockButton: "w-full justify-center",
-                      formButtonPrimary: "w-full",
-                      footerActionLink: "text-blue-600 hover:text-blue-700",
-                    },
-                  }}
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-center">
+            <div className="space-y-3">
+              <Button 
+                onClick={handleGoToLogin}
+                className="w-full"
+                size="lg"
+              >
+                前往登录
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={handleClose}
-                className="w-full max-w-sm"
+                className="w-full"
               >
                 稍后再说
               </Button>
@@ -115,7 +104,7 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>价格:</span>
                   <span className="text-blue-600">¥{selectedProduct.price.toFixed(2)}</span>
-                </div>s
+                </div>
               </div>
             )}
             
@@ -225,9 +214,9 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
+        <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-semibold">购买商品</h2>
           <Button
             variant="ghost"
@@ -240,7 +229,7 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           {renderStepContent()}
         </div>
       </div>
