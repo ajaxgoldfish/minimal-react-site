@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Package2 } from "lucide-react";
+import { Menu, Package2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,16 +11,37 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { SignedOut } from "@clerk/nextjs";
-
-const menuItems = [
-  { name: "首页", href: "/" },
-  { name: "商品展示", href: "/products" },
-  { name: "联系我们", href: "/contact" },
-  { name: "订单中心", href: "/user" },
-];
+import { SignedOut, useUser } from "@clerk/nextjs";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export function MobileMenu() {
+  const { user, isLoaded } = useUser();
+  const { userWithRole, loading, isAdmin } = useUserRole();
+
+  // 基础菜单项
+  const baseMenuItems = [
+    { name: "首页", href: "/" },
+    { name: "商品展示", href: "/products" },
+    { name: "联系我们", href: "/contact" },
+  ];
+
+  // 角色相关的菜单项
+  const roleMenuItems = [];
+  
+  if (isLoaded && user && userWithRole && !loading) {
+    if (isAdmin) {
+      roleMenuItems.push(
+        { name: "管理后台", href: "/admin" },
+      );
+    } else {
+      roleMenuItems.push(
+        { name: "订单中心", href: "/user" },
+      );
+    }
+  }
+
+  const menuItems = [...baseMenuItems, ...roleMenuItems];
+
   return (
     <div className="md:hidden">
       <Sheet>
