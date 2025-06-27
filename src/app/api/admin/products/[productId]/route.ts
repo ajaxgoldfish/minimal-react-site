@@ -21,12 +21,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, category, price, image } = body;
+    const { name, description, category, price, image, imageData, imageMimeType } = body;
 
     // 验证必填字段
-    if (!name || !description || !category || !price || !image) {
+    if (!name || !description || !category || !price) {
       return NextResponse.json(
-        { error: '所有字段都是必填的' },
+        { error: '商品名称、描述、分类和价格都是必填的' },
         { status: 400 }
       );
     }
@@ -50,15 +50,34 @@ export async function PUT(
     }
 
     // 更新商品
+    const updateData: {
+      name: string;
+      description: string;
+      category: string;
+      price: number;
+      image?: string | null;
+      imageData?: string | null;
+      imageMimeType?: string | null;
+    } = {
+      name: name.trim(),
+      description: description.trim(),
+      category: category.trim(),
+      price: numPrice,
+    };
+
+    // 如果提供了新的图片数据，则更新图片相关字段
+    if (imageData) {
+      updateData.imageData = imageData;
+      updateData.imageMimeType = imageMimeType;
+      updateData.image = null; // 清除URL，使用二进制数据
+    } else if (image) {
+      updateData.image = image.trim();
+      // 如果提供了URL，可以选择清除二进制数据或保留
+    }
+
     const [updatedProduct] = await db
       .update(product)
-      .set({
-        name: name.trim(),
-        description: description.trim(),
-        category: category.trim(),
-        price: numPrice,
-        image: image.trim(),
-      })
+      .set(updateData)
       .where(eq(product.id, productId))
       .returning();
 
@@ -88,7 +107,7 @@ export async function PUT(
 
 // 删除商品 (DELETE)
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ productId: string }> }
 ) {
   try {

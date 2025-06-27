@@ -25,7 +25,9 @@ interface Order {
     id: number;
     name: string;
     description: string;
-    image: string;
+    image: string | null;
+    imageData: string | null;
+    imageMimeType: string | null;
     category: string;
     price: number;
   } | null;

@@ -9,7 +9,9 @@ export interface ProductInfo {
   id: string;
   name: string;
   price: number;
-  image?: string;
+  image?: string | null;
+  imageData?: string | null;
+  imageMimeType?: string | null;
 }
 
 export interface OrderInfo {

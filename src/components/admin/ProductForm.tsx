@@ -12,7 +12,9 @@ export interface Product {
   description: string;
   category: string;
   price: number;
-  image: string;
+  image: string | null;
+  imageData: string | null;
+  imageMimeType: string | null;
 }
 
 interface ProductFormProps {
@@ -26,7 +28,7 @@ interface FormData {
   description: string;
   category: string;
   price: string;
-  image: string;
+  imageFile: File | null;
 }
 
 interface FormErrors {
@@ -34,7 +36,7 @@ interface FormErrors {
   description?: string;
   category?: string;
   price?: string;
-  image?: string;
+  imageFile?: string;
 }
 
 export default function ProductForm({
@@ -47,11 +49,12 @@ export default function ProductForm({
     description: '',
     category: '',
     price: '',
-    image: '',
+    imageFile: null,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const isEditing = !!product;
 
@@ -63,16 +66,26 @@ export default function ProductForm({
         description: product.description,
         category: product.category,
         price: product.price.toString(),
-        image: product.image,
+        imageFile: null,
       });
+
+      // 设置预览图片
+      if (product.imageData && product.imageMimeType) {
+        setPreviewUrl(`data:${product.imageMimeType};base64,${product.imageData}`);
+      } else if (product.image) {
+        setPreviewUrl(product.image);
+      } else {
+        setPreviewUrl(null);
+      }
     } else {
       setFormData({
         name: '',
         description: '',
         category: '',
         price: '',
-        image: '',
+        imageFile: null,
       });
+      setPreviewUrl(null);
     }
     setErrors({});
   }, [product]);
@@ -102,21 +115,21 @@ export default function ProductForm({
       }
     }
 
-    if (!formData.image.trim()) {
-      newErrors.image = '商品图片URL不能为空';
-    } else {
-      const imageUrl = formData.image.trim();
-      // 检查是否是完整的URL
-      const isFullUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-      // 检查是否是相对路径（以/开头）
-      const isRelativePath = imageUrl.startsWith('/');
-      // 检查文件扩展名
-      const hasValidExtension = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(imageUrl);
+    // 对于新增商品，必须上传图片
+    // 对于编辑商品，如果没有上传新图片，则使用原有图片
+    if (!isEditing && !formData.imageFile) {
+      newErrors.imageFile = '请选择商品图片';
+    } else if (formData.imageFile) {
+      // 验证文件类型
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(formData.imageFile.type)) {
+        newErrors.imageFile = '请选择有效的图片文件（支持 JPG, PNG, GIF, WebP 格式）';
+      }
 
-      if (!isFullUrl && !isRelativePath) {
-        newErrors.image = '请输入完整的图片URL（如 https://example.com/image.jpg）或相对路径（如 /images/product.jpg）';
-      } else if (!hasValidExtension) {
-        newErrors.image = '图片URL必须以图片格式结尾（支持 jpg, png, gif, webp, svg）';
+      // 验证文件大小（限制为5MB）
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (formData.imageFile.size > maxSize) {
+        newErrors.imageFile = '图片文件大小不能超过5MB';
       }
     }
 
@@ -124,22 +137,55 @@ export default function ProductForm({
     return Object.keys(newErrors).length === 0;
   };
 
+  // 将文件转换为base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // 移除 "data:image/jpeg;base64," 前缀，只保留base64数据
+        const base64Data = result.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setSubmitting(true);
     try {
+      let imageData: string | null = null;
+      let imageMimeType: string | null = null;
+      let imageUrl: string | null = null;
+
+      if (formData.imageFile) {
+        // 如果上传了新图片，转换为base64
+        imageData = await fileToBase64(formData.imageFile);
+        imageMimeType = formData.imageFile.type;
+        imageUrl = null; // 清除URL，使用二进制数据
+      } else if (isEditing && product) {
+        // 如果是编辑且没有上传新图片，保持原有图片数据
+        imageData = product.imageData;
+        imageMimeType = product.imageMimeType;
+        imageUrl = product.image;
+      }
+
       await onSubmit({
         name: formData.name.trim(),
         description: formData.description.trim(),
         category: formData.category.trim(),
         price: parseFloat(formData.price),
-        image: formData.image.trim(),
+        image: imageUrl,
+        imageData,
+        imageMimeType,
       });
     } finally {
       setSubmitting(false);
@@ -150,8 +196,27 @@ export default function ProductForm({
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // 清除对应字段的错误
-    if (errors[field]) {
+    if (errors[field as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // 处理文件选择
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setFormData(prev => ({ ...prev, imageFile: file }));
+
+    // 清除错误
+    if (errors.imageFile) {
+      setErrors(prev => ({ ...prev, imageFile: undefined }));
+    }
+
+    // 生成预览URL
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
     }
   };
 
@@ -261,56 +326,48 @@ export default function ProductForm({
             {/* 商品图片 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                商品图片URL *
+                商品图片 {!isEditing && '*'}
               </label>
               <input
-                type="text"
-                value={formData.image}
-                onChange={(e) => handleInputChange('image', e.target.value)}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.image ? 'border-red-500' : 'border-gray-300'
+                  errors.imageFile ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="请输入图片URL或路径，例如：https://example.com/image.jpg 或 /images/product.png"
                 disabled={submitting}
               />
-              {errors.image && (
-                <p className="text-red-500 text-sm mt-1">{errors.image}</p>
+              {errors.imageFile && (
+                <p className="text-red-500 text-sm mt-1">{errors.imageFile}</p>
               )}
-              {formData.image && (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500 mb-1">图片预览：</p>
-                  <div className="relative">
+              <p className="text-sm text-gray-500 mt-1">
+                支持 JPG, PNG, GIF, WebP 格式，文件大小不超过5MB
+              </p>
+
+              {/* 图片预览 */}
+              {previewUrl && (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-500 mb-2">图片预览：</p>
+                  <div className="relative inline-block">
                     <Image
-                      src={formData.image}
+                      src={previewUrl}
                       alt="商品图片预览"
-                      width={80}
-                      height={80}
+                      width={128}
+                      height={128}
                       className="object-cover rounded border"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        // 显示错误提示
-                        const errorDiv = target.nextElementSibling as HTMLElement;
-                        if (errorDiv) {
-                          errorDiv.style.display = 'flex';
-                        }
-                      }}
-                      onLoad={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'block';
-                        // 隐藏错误提示
-                        const errorDiv = target.nextElementSibling as HTMLElement;
-                        if (errorDiv) {
-                          errorDiv.style.display = 'none';
-                        }
-                      }}
+                      unoptimized={previewUrl.startsWith('data:')}
                     />
-                    <div
-                      className="w-20 h-20 bg-gray-100 rounded border flex items-center justify-center text-xs text-gray-500 text-center"
-                      style={{ display: 'none' }}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewUrl(null);
+                        setFormData(prev => ({ ...prev, imageFile: null }));
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                      disabled={submitting}
                     >
-                      图片加载失败
-                    </div>
+                      ×
+                    </button>
                   </div>
                 </div>
               )}

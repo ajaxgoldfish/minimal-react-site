@@ -12,7 +12,9 @@ export interface Product {
   description: string;
   category: string;
   price: number;
-  image: string;
+  image: string | null;
+  imageData: string | null;
+  imageMimeType: string | null;
 }
 
 export default function AdminProductsPage() {
@@ -26,6 +28,28 @@ export default function AdminProductsPage() {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+
+  // 加载商品列表
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetchWithRetry('/api/admin/products');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '获取商品列表失败');
+      }
+
+      setProducts(data.products);
+    } catch (error) {
+      console.error('加载商品列表失败:', error);
+      setError(error instanceof Error ? error.message : '加载商品列表失败');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // 检查权限
   const checkPermission = useCallback(async () => {
@@ -48,7 +72,7 @@ export default function AdminProductsPage() {
       console.error('权限检查失败:', error);
       setHasPermission(false);
     }
-  }, []);
+  }, [loadProducts]);
 
   useEffect(() => {
     checkPermission();
@@ -92,27 +116,7 @@ export default function AdminProductsPage() {
 
 
 
-  // 加载商品列表
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetchWithRetry('/api/admin/products');
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || '获取商品列表失败');
-      }
-      
-      setProducts(data.products);
-    } catch (error) {
-      console.error('加载商品列表失败:', error);
-      setError(error instanceof Error ? error.message : '加载商品列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   // 添加商品
   const handleAddProduct = async (productData: Omit<Product, 'id'>) => {

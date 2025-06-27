@@ -12,7 +12,9 @@ export interface ProductType {
   id: number;
   name: string;
   description: string;
-  image: string;
+  image: string | null;
+  imageData: string | null;
+  imageMimeType: string | null;
   category: string;
   price: number;
 }
@@ -90,13 +92,28 @@ export default function ProductList({
         {currentProducts.map((product) => (
           <div key={product.id} className="border rounded-lg shadow-lg overflow-hidden flex flex-col">
             <div className="h-48 bg-gray-200 flex items-center justify-center">
-              <Image 
-                src={product.image} 
-                alt={product.name} 
-                width={96} 
-                height={96} 
-                className="h-24 w-24 object-contain" 
-              />
+              {product.imageData ? (
+                <Image
+                  src={`data:${product.imageMimeType};base64,${product.imageData}`}
+                  alt={product.name}
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 object-contain"
+                  unoptimized={true}
+                />
+              ) : product.image ? (
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 object-contain"
+                />
+              ) : (
+                <div className="h-24 w-24 bg-gray-300 rounded flex items-center justify-center">
+                  <span className="text-gray-500 text-sm">无图片</span>
+                </div>
+              )}
             </div>
             <div className="p-4 flex flex-col flex-grow">
               <h2 className="text-xl font-semibold mb-2">{product.name}</h2>

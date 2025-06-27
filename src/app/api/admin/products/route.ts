@@ -43,12 +43,20 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { name, description, category, price, image } = body;
+    const { name, description, category, price, image, imageData, imageMimeType } = body;
 
     // 验证必填字段
-    if (!name || !description || !category || !price || !image) {
+    if (!name || !description || !category || !price) {
       return NextResponse.json(
-        { error: '所有字段都是必填的' },
+        { error: '商品名称、描述、分类和价格都是必填的' },
+        { status: 400 }
+      );
+    }
+
+    // 验证图片：必须有imageData或image其中之一
+    if (!imageData && !image) {
+      return NextResponse.json(
+        { error: '必须提供商品图片' },
         { status: 400 }
       );
     }
@@ -70,7 +78,9 @@ export async function POST(request: NextRequest) {
         description: description.trim(),
         category: category.trim(),
         price: numPrice,
-        image: image.trim(),
+        image: image ? image.trim() : null,
+        imageData: imageData || null,
+        imageMimeType: imageMimeType || null,
       })
       .returning();
 

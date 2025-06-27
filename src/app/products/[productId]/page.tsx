@@ -9,7 +9,9 @@ interface Product {
   id: number;
   name: string;
   description: string;
-  image: string;
+  image: string | null;
+  imageData: string | null;
+  imageMimeType: string | null;
   category: string;
   price: number;
 }
@@ -75,12 +77,26 @@ export default function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* 商品图片 */}
           <div className="aspect-square relative">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover rounded-lg"
-            />
+            {product.imageData ? (
+              <Image
+                src={`data:${product.imageMimeType};base64,${product.imageData}`}
+                alt={product.name}
+                fill
+                className="object-cover rounded-lg"
+                unoptimized={true}
+              />
+            ) : product.image ? (
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                className="object-cover rounded-lg"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                <span className="text-gray-500">无图片</span>
+              </div>
+            )}
           </div>
 
           {/* 商品信息 */}

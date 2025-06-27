@@ -12,7 +12,9 @@ export interface Product {
   description: string;
   category: string;
   price: number;
-  image: string;
+  image: string | null;
+  imageData: string | null;
+  imageMimeType: string | null;
 }
 
 interface ProductTableProps {
@@ -115,13 +117,28 @@ export default function ProductTable({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="relative h-12 w-12">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          fill
-                          className="object-cover rounded-md"
-                          sizes="48px"
-                        />
+                        {product.imageData ? (
+                          <Image
+                            src={`data:${product.imageMimeType};base64,${product.imageData}`}
+                            alt={product.name}
+                            fill
+                            className="object-cover rounded-md"
+                            unoptimized={true}
+                            sizes="48px"
+                          />
+                        ) : product.image ? (
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            className="object-cover rounded-md"
+                            sizes="48px"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
+                            <span className="text-xs text-gray-500">无图片</span>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

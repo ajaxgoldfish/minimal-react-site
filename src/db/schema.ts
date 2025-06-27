@@ -21,7 +21,9 @@ export const product = sqliteTable('product', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   description: text('description').notNull(),
-  image: text('image').notNull(),
+  image: text('image'), // 保留原有的URL字段，用于向后兼容
+  imageData: text('imageData'), // 新增：存储base64编码的图片数据
+  imageMimeType: text('imageMimeType'), // 新增：存储图片MIME类型 (image/jpeg, image/png等)
   category: text('category').notNull(),
   price: real('price').notNull(),
 });
