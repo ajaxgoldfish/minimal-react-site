@@ -101,6 +101,12 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
                   <span className="font-medium">商品名称:</span>
                   <span>{selectedProduct.name}</span>
                 </div>
+                {selectedProduct.variantName && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">规格:</span>
+                    <span className="text-sm text-gray-600">{selectedProduct.variantName}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>价格:</span>
                   <span className="text-blue-600">¥{selectedProduct.price.toFixed(2)}</span>

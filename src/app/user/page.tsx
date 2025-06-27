@@ -51,13 +51,14 @@ export default async function UserPage() {
     }
   }
 
-  // 获取用户的订单，包含商品信息
+  // 获取用户的订单，包含商品和规格信息
   const userOrders = await db.query.user.findFirst({
     where: eq(user.id, dbUser.id),
     with: {
       orders: {
         with: {
           product: true,
+          productVariant: true,
         },
         orderBy: (orders, { desc }) => [desc(orders.createdAt)],
       },
@@ -84,6 +85,9 @@ export default async function UserPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{order.product?.name}</h3>
+                    {order.productVariant && (
+                      <p className="text-sm text-gray-600">规格: {order.productVariant.name}</p>
+                    )}
                     <p className="text-gray-600">订单号: {order.id}</p>
                     <p className="text-sm text-gray-500">
                       创建时间: {order.createdAt instanceof Date
@@ -93,7 +97,7 @@ export default async function UserPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-lg">${order.amount}</p>
+                    <p className="font-semibold text-lg">¥{order.amount.toFixed(2)}</p>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         order.status === 'paid'
