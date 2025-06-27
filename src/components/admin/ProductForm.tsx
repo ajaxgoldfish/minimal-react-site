@@ -414,14 +414,15 @@ export default function ProductForm({
                 <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-2">图片预览：</p>
                   <div className="relative inline-block">
-                    <Image
-                      src={previewUrl}
-                      alt="商品图片预览"
-                      width={128}
-                      height={128}
-                      className="object-cover rounded border"
-                      unoptimized={previewUrl.startsWith('data:')}
-                    />
+                    <div className="aspect-[3/4] w-32 relative">
+                      <Image
+                        src={previewUrl}
+                        alt="商品图片预览"
+                        fill
+                        className="object-cover rounded border"
+                        unoptimized={previewUrl.startsWith('data:')}
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -462,14 +463,15 @@ export default function ProductForm({
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {detailImagePreviews.map((url, index) => (
                       <div key={index} className="relative">
-                        <Image
-                          src={url}
-                          alt={`详情图预览 ${index + 1}`}
-                          width={128}
-                          height={128}
-                          className="object-cover rounded border w-full h-32"
-                          unoptimized={true}
-                        />
+                        <div className="aspect-[3/4] relative">
+                          <Image
+                            src={url}
+                            alt={`详情图预览 ${index + 1}`}
+                            fill
+                            className="object-cover rounded border"
+                            unoptimized={true}
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeNewDetailImage(index)}
@@ -491,14 +493,15 @@ export default function ProductForm({
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {existingDetailImages.map((img, index) => (
                       <div key={index} className="relative">
-                        <Image
-                          src={`data:${img.imageMimeType};base64,${img.imageData}`}
-                          alt={`详情图 ${index + 1}`}
-                          width={128}
-                          height={128}
-                          className="object-cover rounded border w-full h-32"
-                          unoptimized={true}
-                        />
+                        <div className="aspect-[3/4] relative">
+                          <Image
+                            src={`data:${img.imageMimeType};base64,${img.imageData}`}
+                            alt={`详情图 ${index + 1}`}
+                            fill
+                            className="object-cover rounded border"
+                            unoptimized={true}
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeExistingDetailImage(index)}

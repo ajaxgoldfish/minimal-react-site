@@ -91,7 +91,7 @@ export default function ProductPage({
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* 商品图片 */}
-          <div className="aspect-square relative">
+          <div className="aspect-[3/4] relative">
             {product.imageData ? (
               <Image
                 src={`data:${product.imageMimeType};base64,${product.imageData}`}
@@ -149,7 +149,7 @@ export default function ProductPage({
             <h2 className="text-2xl font-bold text-gray-900 mb-6">商品详情</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {product.detailImages.map((img, index) => (
-                <div key={index} className="aspect-square relative">
+                <div key={index} className="aspect-[3/4] relative">
                   <Image
                     src={`data:${img.imageMimeType};base64,${img.imageData}`}
                     alt={`${product.name} 详情图 ${index + 1}`}

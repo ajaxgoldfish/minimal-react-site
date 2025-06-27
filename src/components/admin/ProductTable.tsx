@@ -122,7 +122,7 @@ export default function ProductTable({
                       {product.id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="relative h-12 w-12">
+                      <div className="relative aspect-[3/4] w-12">
                         {product.imageData ? (
                           <Image
                             src={`data:${product.imageMimeType};base64,${product.imageData}`}
