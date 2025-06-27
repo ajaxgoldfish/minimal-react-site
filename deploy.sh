@@ -5,6 +5,10 @@ set -e
 
 echo "🚀 开始部署..."
 
+# 0. 删除之前的日志
+rm /root/.pm2/logs/next-app-error.log
+
+
 # 1. 停止并删除现有的 PM2 进程（如果存在）
 # 使用 `|| true` 来防止在进程不存在时脚本因错误而退出
 echo "停止并删除 PM2 进程: next-app..."

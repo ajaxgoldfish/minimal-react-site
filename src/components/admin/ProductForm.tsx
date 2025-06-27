@@ -6,6 +6,11 @@ import { Card } from '@/components/ui/card';
 import { X } from 'lucide-react';
 import Image from 'next/image';
 
+interface DetailImage {
+  imageData: string;
+  imageMimeType: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -15,6 +20,7 @@ export interface Product {
   image: string | null;
   imageData: string | null;
   imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
 }
 
 interface ProductFormProps {
@@ -29,6 +35,7 @@ interface FormData {
   category: string;
   price: string;
   imageFile: File | null;
+  detailImageFiles: File[];
 }
 
 interface FormErrors {
@@ -50,11 +57,13 @@ export default function ProductForm({
     category: '',
     price: '',
     imageFile: null,
+    detailImageFiles: [],
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [detailImagePreviews, setDetailImagePreviews] = useState<string[]>([]);
 
   const isEditing = !!product;
 
@@ -67,6 +76,7 @@ export default function ProductForm({
         category: product.category,
         price: product.price.toString(),
         imageFile: null,
+        detailImageFiles: [],
       });
 
       // 设置预览图片
@@ -77,6 +87,9 @@ export default function ProductForm({
       } else {
         setPreviewUrl(null);
       }
+
+      // 清空详情图预览（编辑时显示现有详情图，不显示预览）
+      setDetailImagePreviews([]);
     } else {
       setFormData({
         name: '',
@@ -84,8 +97,10 @@ export default function ProductForm({
         category: '',
         price: '',
         imageFile: null,
+        detailImageFiles: [],
       });
       setPreviewUrl(null);
+      setDetailImagePreviews([]);
     }
     setErrors({});
   }, [product]);
@@ -137,6 +152,39 @@ export default function ProductForm({
     return Object.keys(newErrors).length === 0;
   };
 
+  // 处理图片文件选择
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, imageFile: file }));
+
+      // 创建预览URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  // 处理详情图文件选择
+  const handleDetailImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setFormData(prev => ({ ...prev, detailImageFiles: files }));
+
+      // 创建预览URLs
+      const urls = files.map(file => URL.createObjectURL(file));
+      setDetailImagePreviews(urls);
+    }
+  };
+
+  // 移除详情图
+  const removeDetailImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      detailImageFiles: prev.detailImageFiles.filter((_, i) => i !== index)
+    }));
+    setDetailImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   // 将文件转换为base64
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -178,6 +226,21 @@ export default function ProductForm({
         imageUrl = product.image;
       }
 
+      // 处理详情图
+      let detailImages: DetailImage[] | null = null;
+      if (formData.detailImageFiles.length > 0) {
+        // 转换新上传的详情图
+        detailImages = await Promise.all(
+          formData.detailImageFiles.map(async (file) => ({
+            imageData: await fileToBase64(file),
+            imageMimeType: file.type,
+          }))
+        );
+      } else if (isEditing && product && product.detailImages) {
+        // 如果是编辑且没有上传新的详情图，保持原有详情图
+        detailImages = product.detailImages;
+      }
+
       await onSubmit({
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -186,6 +249,7 @@ export default function ProductForm({
         image: imageUrl,
         imageData,
         imageMimeType,
+        detailImages,
       });
     } finally {
       setSubmitting(false);
@@ -201,24 +265,7 @@ export default function ProductForm({
     }
   };
 
-  // 处理文件选择
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setFormData(prev => ({ ...prev, imageFile: file }));
 
-    // 清除错误
-    if (errors.imageFile) {
-      setErrors(prev => ({ ...prev, imageFile: undefined }));
-    }
-
-    // 生成预览URL
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    } else {
-      setPreviewUrl(null);
-    }
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -331,7 +378,7 @@ export default function ProductForm({
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange}
+                onChange={handleImageChange}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.imageFile ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -369,6 +416,77 @@ export default function ProductForm({
                       ×
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* 商品详情图 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                商品详情图（可选）
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleDetailImagesChange}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+                disabled={submitting}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                可选择多张图片，支持 JPG, PNG, GIF, WebP 格式，单个文件大小不超过5MB
+              </p>
+
+              {/* 详情图预览 */}
+              {detailImagePreviews.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-500 mb-2">详情图预览：</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {detailImagePreviews.map((url, index) => (
+                      <div key={index} className="relative">
+                        <Image
+                          src={url}
+                          alt={`详情图预览 ${index + 1}`}
+                          width={128}
+                          height={128}
+                          className="object-cover rounded border w-full h-32"
+                          unoptimized={true}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeDetailImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                          disabled={submitting}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 显示现有的详情图（编辑模式） */}
+              {isEditing && product && product.detailImages && product.detailImages.length > 0 && formData.detailImageFiles.length === 0 && (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-500 mb-2">当前详情图：</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {product.detailImages.map((img, index) => (
+                      <div key={index} className="relative">
+                        <Image
+                          src={`data:${img.imageMimeType};base64,${img.imageData}`}
+                          alt={`详情图 ${index + 1}`}
+                          width={128}
+                          height={128}
+                          className="object-cover rounded border w-full h-32"
+                          unoptimized={true}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-400 mt-2">
+                    上传新的详情图将替换现有图片
+                  </p>
                 </div>
               )}
             </div>

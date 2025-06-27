@@ -6,6 +6,11 @@ import ProductForm from '@/components/admin/ProductForm';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+interface DetailImage {
+  imageData: string;
+  imageMimeType: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -15,6 +20,7 @@ export interface Product {
   image: string | null;
   imageData: string | null;
   imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
 }
 
 export default function AdminProductsPage() {
@@ -42,7 +48,20 @@ export default function AdminProductsPage() {
         throw new Error(data.error || '获取商品列表失败');
       }
 
-      setProducts(data.products);
+      // 解析详情图JSON数据
+      const productsWithParsedImages = data.products.map((product: Product & { detailImages: string | null }) => ({
+        ...product,
+        detailImages: product.detailImages ?
+          (() => {
+            try {
+              return JSON.parse(product.detailImages) as DetailImage[];
+            } catch (e) {
+              console.error('Failed to parse detail images for product', product.id, e);
+              return null;
+            }
+          })() : null
+      }));
+      setProducts(productsWithParsedImages);
     } catch (error) {
       console.error('加载商品列表失败:', error);
       setError(error instanceof Error ? error.message : '加载商品列表失败');

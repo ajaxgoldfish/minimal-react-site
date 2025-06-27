@@ -7,6 +7,12 @@ import Image from "next/image";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import type { ProductInfo } from "@/hooks/usePurchaseFlow";
 
+// 详情图类型定义
+export interface DetailImage {
+  imageData: string;
+  imageMimeType: string;
+}
+
 // 为客户端组件定义一个纯粹的、与数据库实现无关的类型
 export interface ProductType {
   id: number;
@@ -15,6 +21,7 @@ export interface ProductType {
   image: string | null;
   imageData: string | null;
   imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
   category: string;
   price: number;
 }

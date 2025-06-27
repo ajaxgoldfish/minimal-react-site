@@ -24,6 +24,7 @@ export const product = sqliteTable('product', {
   image: text('image'), // 保留原有的URL字段，用于向后兼容
   imageData: text('imageData'), // 新增：存储base64编码的图片数据
   imageMimeType: text('imageMimeType'), // 新增：存储图片MIME类型 (image/jpeg, image/png等)
+  detailImages: text('detailImages'), // 新增：存储商品详情图的JSON数据，格式为 [{imageData: string, imageMimeType: string}]
   category: text('category').notNull(),
   price: real('price').notNull(),
 });

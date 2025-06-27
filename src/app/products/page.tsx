@@ -6,12 +6,28 @@ import { eq } from 'drizzle-orm';
 export const revalidate = 60; // 每60秒重新验证一次数据
 
 async function getProducts(category?: string) {
+  let products;
   if (category && category !== '所有商品') {
-    return await db.query.product.findMany({
+    products = await db.query.product.findMany({
       where: eq(product.category, category),
     });
+  } else {
+    products = await db.query.product.findMany();
   }
-  return await db.query.product.findMany();
+
+  // 解析详情图JSON数据
+  return products.map(product => ({
+    ...product,
+    detailImages: product.detailImages ?
+      (() => {
+        try {
+          return JSON.parse(product.detailImages);
+        } catch (e) {
+          console.error('Failed to parse detail images for product', product.id, e);
+          return null;
+        }
+      })() : null
+  }));
 }
 
 export default async function ProductsPage({

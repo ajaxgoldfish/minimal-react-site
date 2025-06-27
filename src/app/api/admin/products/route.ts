@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { name, description, category, price, image, imageData, imageMimeType } = body;
+    const { name, description, category, price, image, imageData, imageMimeType, detailImages } = body;
 
     // 验证必填字段
     if (!name || !description || !category || !price) {
@@ -70,6 +70,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 处理详情图数据
+    let detailImagesJson: string | null = null;
+    if (detailImages && Array.isArray(detailImages) && detailImages.length > 0) {
+      detailImagesJson = JSON.stringify(detailImages);
+    }
+
     // 创建商品
     const [newProduct] = await db
       .insert(product)
@@ -81,6 +87,7 @@ export async function POST(request: NextRequest) {
         image: image ? image.trim() : null,
         imageData: imageData || null,
         imageMimeType: imageMimeType || null,
+        detailImages: detailImagesJson,
       })
       .returning();
 

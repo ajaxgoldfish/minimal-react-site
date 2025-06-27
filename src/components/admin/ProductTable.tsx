@@ -6,6 +6,11 @@ import { Card } from '@/components/ui/card';
 import { Edit, Trash2, Plus } from 'lucide-react';
 import Image from 'next/image';
 
+interface DetailImage {
+  imageData: string;
+  imageMimeType: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -15,6 +20,7 @@ export interface Product {
   image: string | null;
   imageData: string | null;
   imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
 }
 
 interface ProductTableProps {

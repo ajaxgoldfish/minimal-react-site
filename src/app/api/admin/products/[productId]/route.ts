@@ -21,7 +21,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, category, price, image, imageData, imageMimeType } = body;
+    const { name, description, category, price, image, imageData, imageMimeType, detailImages } = body;
 
     // 验证必填字段
     if (!name || !description || !category || !price) {
@@ -58,6 +58,7 @@ export async function PUT(
       image?: string | null;
       imageData?: string | null;
       imageMimeType?: string | null;
+      detailImages?: string | null;
     } = {
       name: name.trim(),
       description: description.trim(),
@@ -73,6 +74,15 @@ export async function PUT(
     } else if (image) {
       updateData.image = image.trim();
       // 如果提供了URL，可以选择清除二进制数据或保留
+    }
+
+    // 处理详情图数据
+    if (detailImages !== undefined) {
+      if (detailImages && Array.isArray(detailImages) && detailImages.length > 0) {
+        updateData.detailImages = JSON.stringify(detailImages);
+      } else {
+        updateData.detailImages = null;
+      }
     }
 
     const [updatedProduct] = await db

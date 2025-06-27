@@ -5,6 +5,11 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { PurchaseModal } from '@/components/PurchaseModal';
 
+interface DetailImage {
+  imageData: string;
+  imageMimeType: string;
+}
+
 interface Product {
   id: number;
   name: string;
@@ -12,6 +17,7 @@ interface Product {
   image: string | null;
   imageData: string | null;
   imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
   category: string;
   price: number;
 }
@@ -42,6 +48,15 @@ export default function ProductPage({
         const response = await fetch(`/api/products/${productId}`);
         if (response.ok) {
           const productData = await response.json();
+          // 解析详情图JSON数据
+          if (productData.detailImages && typeof productData.detailImages === 'string') {
+            try {
+              productData.detailImages = JSON.parse(productData.detailImages);
+            } catch (e) {
+              console.error('Failed to parse detail images:', e);
+              productData.detailImages = null;
+            }
+          }
           setProduct(productData);
         } else {
           setProduct(null);
@@ -127,6 +142,26 @@ export default function ProductPage({
             </div>
           </div>
         </div>
+
+        {/* 商品详情图 */}
+        {product.detailImages && product.detailImages.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">商品详情</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {product.detailImages.map((img, index) => (
+                <div key={index} className="aspect-square relative">
+                  <Image
+                    src={`data:${img.imageMimeType};base64,${img.imageData}`}
+                    alt={`${product.name} 详情图 ${index + 1}`}
+                    fill
+                    className="object-cover rounded-lg"
+                    unoptimized={true}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <PurchaseModal
