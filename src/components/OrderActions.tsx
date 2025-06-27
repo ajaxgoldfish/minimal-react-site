@@ -111,19 +111,19 @@ export function OrderActions({
     if (orderStatus === 'pending') {
       // 待支付订单：继续支付、取消订单
       return (
-        <div className="flex gap-3 pt-3 border-t">
-          <Button
-            onClick={handleContinuePayment}
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
-          >
-            继续支付
-          </Button>
+        <div className="flex gap-2 pt-3 border-t">
           <Button
             onClick={() => setShowCancelDialog(true)}
             variant="outline"
-            className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+            className="flex-1"
           >
-            取消订单
+            取消支付
+          </Button>
+          <Button
+            onClick={handleContinuePayment}
+            className="flex-1"
+          >
+            继续支付
           </Button>
         </div>
       );
