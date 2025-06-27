@@ -14,6 +14,7 @@ export const user = sqliteTable('user', {
   name: text('name'),
   age: integer('age'),
   role: text('role').default('customer').notNull(),
+  email: text('email'), // 用户邮箱
 });
 
 // 商品表 - 使用经典的单数表名

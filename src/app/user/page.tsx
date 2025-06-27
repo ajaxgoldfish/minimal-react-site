@@ -27,14 +27,28 @@ export default async function UserPage() {
   });
 
   if (!dbUser) {
+    // 获取用户邮箱
+    const email = currentUserData.emailAddresses?.[0]?.emailAddress || null;
+
     const [newUser] = await db
       .insert(user)
       .values({
         clerkId: currentUserData.id,
         name: currentUserData.firstName || currentUserData.username || '',
+        email: email,
       })
       .returning();
     dbUser = newUser;
+  } else {
+    // 如果用户已存在，检查是否需要更新邮箱
+    const currentEmail = currentUserData.emailAddresses?.[0]?.emailAddress || null;
+    if (currentEmail && currentEmail !== dbUser.email) {
+      await db
+        .update(user)
+        .set({ email: currentEmail })
+        .where(eq(user.id, dbUser.id));
+      dbUser.email = currentEmail; // 更新本地对象
+    }
   }
 
   // 获取用户的订单，包含商品信息
@@ -57,6 +71,7 @@ export default async function UserPage() {
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">个人信息</h2>
         <p><strong>姓名:</strong> {dbUser.name || '未设置'}</p>
+        <p><strong>邮箱:</strong> {dbUser.email || '未设置'}</p>
         <p><strong>用户ID:</strong> {dbUser.clerkId}</p>
       </div>
 

@@ -40,16 +40,33 @@ export async function getCurrentUserWithRole(): Promise<UserWithRole | null> {
         return null;
       }
 
+      // 获取用户邮箱
+      const email = currentUserData.emailAddresses?.[0]?.emailAddress || null;
+
       const [newUser] = await db
         .insert(user)
         .values({
           clerkId: currentUserData.id,
           name: currentUserData.firstName || currentUserData.username || '',
           role: 'customer', // 新用户默认为客户
+          email: email,
         })
         .returning();
 
       dbUser = newUser;
+    } else {
+      // 如果用户已存在，检查是否需要更新邮箱
+      const currentUserData = await getCachedCurrentUser();
+      if (currentUserData) {
+        const currentEmail = currentUserData.emailAddresses?.[0]?.emailAddress || null;
+        if (currentEmail && currentEmail !== dbUser.email) {
+          await db
+            .update(user)
+            .set({ email: currentEmail })
+            .where(eq(user.id, dbUser.id));
+          dbUser.email = currentEmail; // 更新本地对象
+        }
+      }
     }
 
     return {
