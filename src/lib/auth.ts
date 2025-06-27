@@ -24,7 +24,9 @@ export const getCachedCurrentUser = cache(currentUser);
 export async function getCurrentUserWithRole(): Promise<UserWithRole | null> {
   try {
     const authResult = await auth();
+    console.log('Auth result:', { userId: authResult.userId, sessionId: authResult.sessionId });
     if (!authResult.userId) {
+      console.log('No userId found in auth result');
       return null;
     }
 
