@@ -13,6 +13,7 @@ interface OrderActionsProps {
   shippingStatus?: string;
   refundStatus?: string;
   shippingInfo?: string | null;
+  notes?: string | null;
 }
 
 export function OrderActions({
@@ -22,7 +23,8 @@ export function OrderActions({
   amount,
   shippingStatus = 'not_shipped',
   refundStatus = 'normal',
-  shippingInfo
+  shippingInfo,
+  notes
 }: OrderActionsProps) {
   const router = useRouter();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -152,6 +154,16 @@ export function OrderActions({
               <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
                 {shippingInfo}
               </span>
+            </div>
+          )}
+
+          {/* 备注信息 */}
+          {notes && (
+            <div className="mb-3">
+              <span className="text-sm text-gray-600">备注信息:</span>
+              <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded mt-1">
+                {notes}
+              </div>
             </div>
           )}
 

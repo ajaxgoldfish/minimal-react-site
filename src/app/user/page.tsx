@@ -103,6 +103,7 @@ export default async function UserPage() {
                   shippingStatus={order.shippingStatus}
                   refundStatus={order.refundStatus}
                   shippingInfo={order.shippingInfo}
+                  notes={order.notes}
                 />
                 
                 {/* 已取消订单的提示 */}
