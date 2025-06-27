@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/db';
 import { product } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 // 获取所有商品 (GET)
 export async function GET() {

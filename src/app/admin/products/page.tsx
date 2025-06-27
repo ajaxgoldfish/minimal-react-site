@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { requireAdmin } from '@/lib/auth';
+import { useState, useEffect, useCallback } from 'react';
 import ProductTable from '@/components/admin/ProductTable';
 import ProductForm from '@/components/admin/ProductForm';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export interface Product {
   id: number;
@@ -28,12 +26,33 @@ export default function AdminProductsPage() {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
-  const router = useRouter();
 
   // 检查权限
+  const checkPermission = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user/me');
+      if (!response.ok) {
+        setHasPermission(false);
+        return;
+      }
+
+      const user = await response.json();
+      if (user.role !== 'admin') {
+        setHasPermission(false);
+        return;
+      }
+
+      setHasPermission(true);
+      loadProducts();
+    } catch (error) {
+      console.error('权限检查失败:', error);
+      setHasPermission(false);
+    }
+  }, []);
+
   useEffect(() => {
     checkPermission();
-  }, []);
+  }, [checkPermission]);
 
   // 显示通知的函数
   const showNotification = (type: 'success' | 'error', message: string) => {
@@ -71,27 +90,7 @@ export default function AdminProductsPage() {
     throw new Error('请求失败');
   };
 
-  const checkPermission = async () => {
-    try {
-      const response = await fetch('/api/user/me');
-      if (!response.ok) {
-        setHasPermission(false);
-        return;
-      }
-      
-      const user = await response.json();
-      if (user.role !== 'admin') {
-        setHasPermission(false);
-        return;
-      }
-      
-      setHasPermission(true);
-      loadProducts();
-    } catch (error) {
-      console.error('权限检查失败:', error);
-      setHasPermission(false);
-    }
-  };
+
 
   // 加载商品列表
   const loadProducts = async () => {

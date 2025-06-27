@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { X } from 'lucide-react';
+import Image from 'next/image';
 
 export interface Product {
   id: number;
@@ -18,7 +19,6 @@ interface ProductFormProps {
   product?: Product | null; // null 表示新增，有值表示编辑
   onSubmit: (productData: Omit<Product, 'id'>) => Promise<void>;
   onCancel: () => void;
-  loading?: boolean;
 }
 
 interface FormData {
@@ -41,7 +41,6 @@ export default function ProductForm({
   product,
   onSubmit,
   onCancel,
-  loading = false,
 }: ProductFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -281,10 +280,12 @@ export default function ProductForm({
                 <div className="mt-2">
                   <p className="text-sm text-gray-500 mb-1">图片预览：</p>
                   <div className="relative">
-                    <img
+                    <Image
                       src={formData.image}
                       alt="商品图片预览"
-                      className="w-20 h-20 object-cover rounded border"
+                      width={80}
+                      height={80}
+                      className="object-cover rounded border"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
