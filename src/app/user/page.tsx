@@ -100,6 +100,9 @@ export default async function UserPage() {
                   orderStatus={order.status}
                   productName={order.product?.name || '商品信息不可用'}
                   amount={order.amount}
+                  shippingStatus={order.shippingStatus}
+                  refundStatus={order.refundStatus}
+                  shippingInfo={order.shippingInfo}
                 />
                 
                 {/* 已取消订单的提示 */}
