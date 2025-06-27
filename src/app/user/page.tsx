@@ -8,6 +8,7 @@ import { user } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
 import { OrderActions } from '@/components/OrderActions';
+import Link from 'next/link';
 
 export default async function UserPage() {
   const authResult = await auth();
@@ -70,7 +71,10 @@ export default async function UserPage() {
                     <h3 className="font-semibold text-lg">{order.product?.name}</h3>
                     <p className="text-gray-600">订单号: {order.id}</p>
                     <p className="text-sm text-gray-500">
-                      创建时间: {new Date(order.createdAt).toLocaleString()}
+                      创建时间: {order.createdAt instanceof Date
+                        ? order.createdAt.toISOString().slice(0, 19).replace('T', ' ')
+                        : new Date(order.createdAt).toISOString().slice(0, 19).replace('T', ' ')
+                      }
                     </p>
                   </div>
                   <div className="text-right">
@@ -117,9 +121,11 @@ export default async function UserPage() {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">暂无订单</p>
-            <Button onClick={() => window.location.href = '/products'}>
-              去购物
-            </Button>
+            <Link href="/products">
+              <Button>
+                去购物
+              </Button>
+            </Link>
           </div>
         )}
       </div>
