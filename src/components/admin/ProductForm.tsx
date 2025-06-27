@@ -64,6 +64,7 @@ export default function ProductForm({
   const [submitting, setSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [detailImagePreviews, setDetailImagePreviews] = useState<string[]>([]);
+  const [keepExistingDetailImages, setKeepExistingDetailImages] = useState(true);
 
   const isEditing = !!product;
 
@@ -90,6 +91,7 @@ export default function ProductForm({
 
       // 清空详情图预览（编辑时显示现有详情图，不显示预览）
       setDetailImagePreviews([]);
+      setKeepExistingDetailImages(true);
     } else {
       setFormData({
         name: '',
@@ -101,6 +103,7 @@ export default function ProductForm({
       });
       setPreviewUrl(null);
       setDetailImagePreviews([]);
+      setKeepExistingDetailImages(true);
     }
     setErrors({});
   }, [product]);
@@ -185,6 +188,19 @@ export default function ProductForm({
     setDetailImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  // 删除所有现有详情图
+  const clearExistingDetailImages = () => {
+    setKeepExistingDetailImages(false);
+  };
+
+  // 恢复现有详情图
+  const restoreExistingDetailImages = () => {
+    setKeepExistingDetailImages(true);
+    // 清空新上传的详情图
+    setFormData(prev => ({ ...prev, detailImageFiles: [] }));
+    setDetailImagePreviews([]);
+  };
+
   // 将文件转换为base64
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -236,10 +252,11 @@ export default function ProductForm({
             imageMimeType: file.type,
           }))
         );
-      } else if (isEditing && product && product.detailImages) {
-        // 如果是编辑且没有上传新的详情图，保持原有详情图
+      } else if (isEditing && product && product.detailImages && keepExistingDetailImages) {
+        // 如果是编辑且没有上传新的详情图，且保持现有详情图，则使用原有详情图
         detailImages = product.detailImages;
       }
+      // 如果 keepExistingDetailImages 为 false，则 detailImages 保持为 null，表示删除所有详情图
 
       await onSubmit({
         name: formData.name.trim(),
@@ -469,23 +486,57 @@ export default function ProductForm({
               {/* 显示现有的详情图（编辑模式） */}
               {isEditing && product && product.detailImages && product.detailImages.length > 0 && formData.detailImageFiles.length === 0 && (
                 <div className="mt-3">
-                  <p className="text-sm text-gray-500 mb-2">当前详情图：</p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {product.detailImages.map((img, index) => (
-                      <div key={index} className="relative">
-                        <Image
-                          src={`data:${img.imageMimeType};base64,${img.imageData}`}
-                          alt={`详情图 ${index + 1}`}
-                          width={128}
-                          height={128}
-                          className="object-cover rounded border w-full h-32"
-                          unoptimized={true}
-                        />
-                      </div>
-                    ))}
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-gray-500">当前详情图：</p>
+                    <div className="space-x-2">
+                      {!keepExistingDetailImages ? (
+                        <button
+                          type="button"
+                          onClick={restoreExistingDetailImages}
+                          className="text-sm text-blue-600 hover:text-blue-800"
+                          disabled={submitting}
+                        >
+                          恢复详情图
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={clearExistingDetailImages}
+                          className="text-sm text-red-600 hover:text-red-800"
+                          disabled={submitting}
+                        >
+                          删除所有详情图
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {keepExistingDetailImages ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {product.detailImages.map((img, index) => (
+                        <div key={index} className="relative">
+                          <Image
+                            src={`data:${img.imageMimeType};base64,${img.imageData}`}
+                            alt={`详情图 ${index + 1}`}
+                            width={128}
+                            height={128}
+                            className="object-cover rounded border w-full h-32"
+                            unoptimized={true}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                      <p className="text-gray-500">详情图已删除</p>
+                    </div>
+                  )}
+
                   <p className="text-sm text-gray-400 mt-2">
-                    上传新的详情图将替换现有图片
+                    {keepExistingDetailImages
+                      ? "上传新的详情图将替换现有图片"
+                      : "可以上传新的详情图或保持为空"
+                    }
                   </p>
                 </div>
               )}
