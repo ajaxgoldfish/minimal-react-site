@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { X, Plus, Edit, Trash2, Star } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function VariantManager({
   const [editingVariant, setEditingVariant] = useState<ProductVariant | null>(null);
 
   // 加载规格列表
-  const loadVariants = async () => {
+  const loadVariants = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/products/${productId}/variants`);
@@ -56,11 +56,11 @@ export default function VariantManager({
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     loadVariants();
-  }, [productId]);
+  }, [productId, loadVariants]);
 
   // 删除规格
   const handleDelete = async (variantId: number) => {

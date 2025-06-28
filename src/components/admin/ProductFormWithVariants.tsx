@@ -18,7 +18,6 @@ interface ProductVariant {
   imageData: string | null;
   imageMimeType: string | null;
   detailImages: DetailImage[] | null;
-  stock: number;
   isDefault: boolean;
   imageFile?: File | null;
   detailImageFiles?: File[];
@@ -35,7 +34,20 @@ export interface Product {
 
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (productData: any) => Promise<void>;
+  onSubmit: (productData: {
+    name: string;
+    description: string;
+    category: string;
+    image: string | null;
+    variants: {
+      name: string;
+      price: number;
+      imageData: string | null;
+      imageMimeType: string | null;
+      detailImages: DetailImage[] | null;
+      isDefault: boolean;
+    }[];
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -74,7 +86,6 @@ export default function ProductFormWithVariants({
       imageData: null,
       imageMimeType: null,
       detailImages: null,
-      stock: 0,
       isDefault: true,
       imageFile: null,
       detailImageFiles: [],
@@ -91,7 +102,7 @@ export default function ProductFormWithVariants({
         image: product.image || '',
         variants: product.variants.map(variant => ({
           ...variant,
-          isDefault: variant.isDefault === 1,
+          isDefault: Boolean(variant.isDefault),
           imageFile: null,
           detailImageFiles: [],
         })),
@@ -164,7 +175,6 @@ export default function ProductFormWithVariants({
         imageData: null,
         imageMimeType: null,
         detailImages: null,
-        stock: 0,
         isDefault: false,
         imageFile: null,
         detailImageFiles: [],
@@ -193,7 +203,7 @@ export default function ProductFormWithVariants({
   };
 
   // 更新规格
-  const updateVariant = (index: number, field: keyof ProductVariant, value: any) => {
+  const updateVariant = (index: number, field: keyof ProductVariant, value: string | number | boolean | File | File[] | null) => {
     setFormData(prev => ({
       ...prev,
       variants: prev.variants.map((variant, i) => {
@@ -264,7 +274,6 @@ export default function ProductFormWithVariants({
             imageData,
             imageMimeType,
             detailImages,
-            stock: variant.stock,
             isDefault: variant.isDefault,
           };
         })
@@ -428,7 +437,7 @@ export default function ProductFormWithVariants({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           规格名称 *
@@ -459,20 +468,7 @@ export default function ProductFormWithVariants({
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          库存
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={variant.stock}
-                          onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="0"
-                          disabled={submitting}
-                        />
-                      </div>
+
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">

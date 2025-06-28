@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/db';
-import { product, productVariant } from '@/db/schema';
+import { product } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 // 更新商品 (PUT)

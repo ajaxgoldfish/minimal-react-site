@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { PurchaseModal } from "@/components/PurchaseModal";
-import type { ProductInfo } from "@/hooks/usePurchaseFlow";
+
+
 
 // 详情图类型定义
 export interface DetailImage {
@@ -22,7 +22,8 @@ export interface ProductVariant {
   imageData: string | null;
   imageMimeType: string | null;
   detailImages: DetailImage[] | null;
-  isDefault: number;
+  isDefault: number | null;
+  createdAt: Date;
 }
 
 // 为客户端组件定义一个纯粹的、与数据库实现无关的类型
@@ -49,26 +50,13 @@ export default function ProductList({
   selectedCategory,
 }: ProductListProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductInfo | null>(null);
-  const [selectedVariants, setSelectedVariants] = useState<{[productId: number]: ProductVariant}>({});
   const itemsPerPage = 8;
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory]);
 
-  // 初始化每个商品的默认规格选择
-  useEffect(() => {
-    const initialVariants: {[productId: number]: ProductVariant} = {};
-    products.forEach(product => {
-      if (product.variants && product.variants.length > 0) {
-        const defaultVariant = product.variants.find(v => v.isDefault === 1) || product.variants[0];
-        initialVariants[product.id] = defaultVariant;
-      }
-    });
-    setSelectedVariants(initialVariants);
-  }, [products]);
+
 
   const categories = ["所有商品", "一类", "二类", "三类", "四类", "五类"];
 
@@ -85,34 +73,7 @@ export default function ProductList({
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
-  const handlePurchaseClick = (product: ProductType) => {
-    const selectedVariant = selectedVariants[product.id];
-    if (!selectedVariant) {
-      alert('请先选择商品规格');
-      return;
-    }
 
-    // 转换为Modal所需的格式
-    const productInfo: ProductInfo = {
-      id: product.id.toString(),
-      name: product.name,
-      price: selectedVariant.price,
-      image: product.image,
-      imageData: selectedVariant.imageData,
-      imageMimeType: selectedVariant.imageMimeType,
-      variantId: selectedVariant.id,
-      variantName: selectedVariant.name,
-    };
-    setSelectedProduct(productInfo);
-    setIsModalOpen(true);
-  };
-
-  const handleVariantChange = (productId: number, variant: ProductVariant) => {
-    setSelectedVariants(prev => ({
-      ...prev,
-      [productId]: variant,
-    }));
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -140,9 +101,11 @@ export default function ProductList({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {currentProducts.map((product) => {
-          const selectedVariant = selectedVariants[product.id];
-          const displayImage = selectedVariant?.imageData || product.imageData;
-          const displayImageType = selectedVariant?.imageMimeType || product.imageMimeType;
+          // 获取默认规格用于显示
+          const defaultVariant = product.variants?.find(v => v.isDefault === 1) || product.variants?.[0];
+          const displayImage = defaultVariant?.imageData;
+          const displayImageType = defaultVariant?.imageMimeType;
+          const displayPrice = defaultVariant?.price || 0;
 
           return (
             <div key={product.id} className="border rounded-lg shadow-lg overflow-hidden flex flex-col">
@@ -174,47 +137,20 @@ export default function ProductList({
                 {product.description}
               </p>
               <div className="mt-auto pt-4">
-                {/* 规格选择 */}
-                {product.variants && product.variants.length > 1 && (
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      规格选择:
-                    </label>
-                    <select
-                      value={selectedVariant?.id || ''}
-                      onChange={(e) => {
-                        const variantId = parseInt(e.target.value);
-                        const variant = product.variants.find(v => v.id === variantId);
-                        if (variant) {
-                          handleVariantChange(product.id, variant);
-                        }
-                      }}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {product.variants.map((variant) => (
-                        <option key={variant.id} value={variant.id}>
-                          {variant.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-xl font-bold text-blue-600">
-                    ¥{selectedVariant?.price.toFixed(2) || product.price.toFixed(2)}
+                    ¥{displayPrice.toFixed(2)}
                   </span>
+                  {product.variants && product.variants.length > 1 && (
+                    <span className="text-sm text-gray-500">
+                      {product.variants.length} 个规格
+                    </span>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/products/${product.id}`} passHref className="flex-1">
-                    <Button variant="outline" className="w-full">详情</Button>
+                <div className="w-full">
+                  <Link href={`/products/${product.id}`} passHref className="w-full">
+                    <Button className="w-full">立即购买</Button>
                   </Link>
-                  <Button
-                    onClick={() => handlePurchaseClick(product)}
-                    className="flex-1"
-                  >
-                    购买
-                  </Button>
                 </div>
               </div>
             </div>
@@ -233,12 +169,7 @@ export default function ProductList({
         </Button>
       </div>
 
-      {/* 购买Modal */}
-      <PurchaseModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
+
     </div>
   );
 } 

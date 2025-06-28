@@ -57,16 +57,14 @@ export default function ProductTable({
     if (window.confirm('确定要删除这个商品吗？此操作不可撤销。')) {
       setDeletingId(productId);
       try {
-        await onDelete(productId);
+        onDelete(productId);
       } finally {
         setDeletingId(null);
       }
     }
   };
 
-  const formatPrice = (price: number) => {
-    return `¥${price.toFixed(2)}`;
-  };
+
 
   const handleManageVariants = (product: Product) => {
     setSelectedProduct(product);
@@ -142,28 +140,37 @@ export default function ProductTable({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="relative aspect-[3/4] w-12">
-                        {product.imageData ? (
-                          <Image
-                            src={`data:${product.imageMimeType};base64,${product.imageData}`}
-                            alt={product.name}
-                            fill
-                            className="object-cover rounded-md"
-                            unoptimized={true}
-                            sizes="48px"
-                          />
-                        ) : product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className="object-cover rounded-md"
-                            sizes="48px"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
-                            <span className="text-xs text-gray-500">无图片</span>
-                          </div>
-                        )}
+                        {(() => {
+                          const defaultVariant = product.variants?.find(v => v.isDefault === 1) || product.variants?.[0];
+                          if (defaultVariant?.imageData) {
+                            return (
+                              <Image
+                                src={`data:${defaultVariant.imageMimeType};base64,${defaultVariant.imageData}`}
+                                alt={product.name}
+                                fill
+                                className="object-cover rounded-md"
+                                unoptimized={true}
+                                sizes="48px"
+                              />
+                            );
+                          } else if (product.image) {
+                            return (
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                fill
+                                className="object-cover rounded-md"
+                                sizes="48px"
+                              />
+                            );
+                          } else {
+                            return (
+                              <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
+                                <span className="text-xs text-gray-500">无图片</span>
+                              </div>
+                            );
+                          }
+                        })()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

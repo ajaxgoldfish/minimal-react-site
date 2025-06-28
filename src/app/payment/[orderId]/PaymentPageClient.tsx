@@ -15,6 +15,7 @@ interface Order {
   paypalOrderId: string | null;
   userId: number | null;
   productId: number | null;
+  productVariantId: number | null;
   user: {
     id: number;
     clerkId: string;
@@ -26,10 +27,18 @@ interface Order {
     name: string;
     description: string;
     image: string | null;
+    category: string;
+  } | null;
+  productVariant: {
+    id: number;
+    productId: number;
+    name: string;
+    price: number;
     imageData: string | null;
     imageMimeType: string | null;
-    category: string;
-    price: number;
+    detailImages: string | null;
+    isDefault: number | null;
+    createdAt: Date;
   } | null;
 }
 

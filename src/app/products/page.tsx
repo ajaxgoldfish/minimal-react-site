@@ -45,7 +45,18 @@ async function getProducts(category?: string) {
             return null;
           }
         })() : null,
-      variants: product.variants,
+      variants: product.variants.map(variant => ({
+        ...variant,
+        detailImages: variant.detailImages ?
+          (() => {
+            try {
+              return JSON.parse(variant.detailImages);
+            } catch (e) {
+              console.error('Failed to parse detail images for variant', variant.id, e);
+              return null;
+            }
+          })() : null,
+      })),
     };
   });
 }

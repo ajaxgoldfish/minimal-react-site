@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { PurchaseModal } from '@/components/PurchaseModal';
+import { Button } from '@/components/ui/button';
+
 
 interface DetailImage {
   imageData: string;
@@ -18,7 +20,8 @@ interface ProductVariant {
   imageData: string | null;
   imageMimeType: string | null;
   detailImages: DetailImage[] | null;
-  isDefault: number;
+  isDefault: number | null;
+  createdAt: Date;
 }
 
 interface Product {
@@ -41,9 +44,9 @@ export default function ProductPage({
 }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [productId, setProductId] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const getProductId = async () => {
@@ -119,14 +122,6 @@ export default function ProductPage({
                 className="object-cover rounded-lg"
                 unoptimized={true}
               />
-            ) : product.imageData ? (
-              <Image
-                src={`data:${product.imageMimeType};base64,${product.imageData}`}
-                alt={product.name}
-                fill
-                className="object-cover rounded-lg"
-                unoptimized={true}
-              />
             ) : product.image ? (
               <Image
                 src={product.image}
@@ -150,7 +145,7 @@ export default function ProductPage({
               <p className="text-gray-600 mb-4">{product.description}</p>
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-3xl font-bold text-blue-600">
-                  ¥{selectedVariant?.price.toFixed(2) || product.price.toFixed(2)}
+                  ¥{selectedVariant?.price.toFixed(2) || '0.00'}
                 </span>
                 <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
                   {product.category}
@@ -179,28 +174,27 @@ export default function ProductPage({
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* 购买按钮 */}
-            <div className="space-y-4">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                disabled={!selectedVariant}
-              >
-                {!selectedVariant ? '请选择规格' : '立即购买'}
-              </button>
+              {/* 购买按钮 */}
+              <div className="space-y-4">
+                <Button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full"
+                  disabled={!selectedVariant}
+                >
+                  {!selectedVariant ? '请选择规格' : '立即购买'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 商品详情图 */}
-        {((selectedVariant?.detailImages && selectedVariant.detailImages.length > 0) ||
-          (product.detailImages && product.detailImages.length > 0)) && (
+        {selectedVariant?.detailImages && selectedVariant.detailImages.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">商品详情</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(selectedVariant?.detailImages || product.detailImages || []).map((img, index) => (
+              {selectedVariant.detailImages.map((img: DetailImage, index: number) => (
                 <div key={index} className="aspect-[3/4] relative">
                   <Image
                     src={`data:${img.imageMimeType};base64,${img.imageData}`}
@@ -216,25 +210,23 @@ export default function ProductPage({
         )}
       </div>
 
-      <PurchaseModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedVariant ? {
-          id: product.id.toString(),
-          name: product.name,
-          price: selectedVariant.price,
-          image: product.image,
-          imageData: selectedVariant.imageData,
-          imageMimeType: selectedVariant.imageMimeType,
-          variantId: selectedVariant.id,
-          variantName: selectedVariant.name,
-        } : {
-          id: product.id.toString(),
-          name: product.name,
-          price: product.price,
-          image: product.image,
-        }}
-      />
+      {/* 购买弹窗 */}
+      {isModalOpen && selectedVariant && (
+        <PurchaseModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={{
+            id: product.id.toString(),
+            name: product.name,
+            price: selectedVariant.price,
+            image: product.image,
+            imageData: selectedVariant.imageData,
+            imageMimeType: selectedVariant.imageMimeType,
+            variantId: selectedVariant.id,
+            variantName: selectedVariant.name,
+          }}
+        />
+      )}
     </div>
   );
-} 
+}

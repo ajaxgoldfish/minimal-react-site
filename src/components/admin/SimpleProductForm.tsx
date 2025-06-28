@@ -5,17 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { X } from 'lucide-react';
 
+interface DetailImage {
+  imageData: string;
+  imageMimeType: string;
+}
+
+interface ProductVariant {
+  id: number;
+  productId: number;
+  name: string;
+  price: number;
+  imageData: string | null;
+  imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
+  isDefault: number;
+}
+
 export interface Product {
   id: number;
   name: string;
   description: string;
   category: string;
   image: string | null;
+  variants: ProductVariant[];
 }
 
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (productData: Omit<Product, 'id'>) => Promise<void>;
+  onSubmit: (productData: Omit<Product, 'id' | 'variants'>) => Promise<void>;
   onCancel: () => void;
 }
 

@@ -146,7 +146,7 @@ export default function AdminProductsPage() {
 
 
   // 添加商品
-  const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
+  const handleAddProduct = async (productData: Omit<Product, 'id' | 'variants'>) => {
     try {
       const response = await fetchWithRetry('/api/admin/products', {
         method: 'POST',
@@ -175,7 +175,7 @@ export default function AdminProductsPage() {
   };
 
   // 编辑商品
-  const handleEditProduct = async (productData: Omit<Product, 'id'>) => {
+  const handleEditProduct = async (productData: Omit<Product, 'id' | 'variants'>) => {
     if (!editingProduct) return;
     
     try {

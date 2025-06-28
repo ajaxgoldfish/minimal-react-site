@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/db';
-import { product, order, productVariant } from '@/db/schema';
+import { product, order } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
 
