@@ -20,6 +20,7 @@ interface Order {
   createdAt: Date;
   userId: number | null;
   productId: number | null;
+  productVariantId: number | null;
   shippingStatus: ShippingStatus;
   shippingInfo: string | null;
   refundStatus: RefundStatus;
@@ -34,7 +35,16 @@ interface Order {
     id: number;
     name: string;
     description: string;
+    category: string;
+  } | null;
+  productVariant: {
+    id: number;
+    productId: number;
+    name: string;
     price: number;
+    imageData: string | null;
+    imageMimeType: string | null;
+    isDefault: number | null;
   } | null;
 }
 
@@ -401,7 +411,7 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xl font-bold">${order.amount.toFixed(2)}</p>
+              <p className="text-xl font-bold">¥{order.amount.toFixed(2)}</p>
               <p className="text-sm text-gray-500">{order.currency}</p>
             </div>
           </div>
@@ -410,10 +420,19 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
             <div>
               <p className="text-sm text-gray-600">用户信息</p>
               <p className="font-medium">{order.user?.name || '未知用户'}</p>
+              <p className="text-xs text-gray-400">ID: {order.user?.clerkId}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">商品信息</p>
               <p className="font-medium">{order.product?.name || '未知商品'}</p>
+              {order.productVariant ? (
+                <div className="text-sm text-gray-500">
+                  <p>规格: {order.productVariant.name}</p>
+                  <p>单价: ¥{order.productVariant.price.toFixed(2)}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">无规格信息</p>
+              )}
             </div>
           </div>
 
