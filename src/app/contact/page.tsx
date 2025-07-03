@@ -52,25 +52,14 @@ export default function ContactPage() {
           <p className="text-gray-700 mb-4">
             如需申请退款，请通过以下方式联系我们，并提供完整的订单信息：
           </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">推荐方式：邮箱申请</h3>
-              <p className="text-sm text-gray-600 mb-2">
-                发送邮件至：<span className="font-mono bg-white px-2 py-1 rounded">refund@example.com</span>
-              </p>
-              <p className="text-sm text-gray-600">
-                邮件中请包含：订单号、商品名称、退款原因、联系方式
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">电话申请</h3>
-              <p className="text-sm text-gray-600 mb-2">
-                拨打客服热线：<span className="font-mono bg-white px-2 py-1 rounded">400-123-4567</span>
-              </p>
-              <p className="text-sm text-gray-600">
-                客服会协助您完成退款申请流程
-              </p>
-            </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-2">邮箱申请</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              发送邮件至：<span className="font-mono bg-white px-2 py-1 rounded">refund@example.com</span>
+            </p>
+            <p className="text-sm text-gray-600">
+              邮件中请包含：订单号、商品名称、退款原因
+            </p>
           </div>
         </div>
 
