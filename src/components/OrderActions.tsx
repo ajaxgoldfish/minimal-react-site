@@ -10,8 +10,6 @@ interface OrderActionsProps {
   orderStatus: string;
   productName: string;
   amount: number;
-  shippingStatus?: string;
-  shippingInfo?: string | null;
   notes?: string | null;
 }
 
@@ -20,8 +18,6 @@ export function OrderActions({
   orderStatus,
   productName,
   amount,
-  shippingStatus = 'not_shipped',
-  shippingInfo,
   notes
 }: OrderActionsProps) {
   const router = useRouter();
@@ -84,31 +80,9 @@ export function OrderActions({
     }
 
     if (orderStatus === 'paid') {
-      // 已支付订单：显示发货状态和退款操作
+      // 已支付订单：显示备注信息和退款提示
       return (
         <div className="pt-3 border-t space-y-3">
-          {/* 发货状态显示 */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">发货状态:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              shippingStatus === 'shipped'
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-orange-100 text-orange-800'
-            }`}>
-              {shippingStatus === 'shipped' ? '已发货' : '未发货'}
-            </span>
-          </div>
-
-          {/* 发货信息 */}
-          {shippingInfo && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">发货信息:</span>
-              <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                {shippingInfo}
-              </span>
-            </div>
-          )}
-
           {/* 备注信息 */}
           {notes && (
             <div className="mb-3">

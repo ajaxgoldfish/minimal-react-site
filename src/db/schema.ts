@@ -55,8 +55,6 @@ export const order = sqliteTable('order', {
   productId: integer('productId').references(() => product.id),
   productVariantId: integer('product_variant_id').references(() => productVariant.id), // 关联商品规格
   // 新增字段
-  shippingStatus: text('shippingStatus').default('not_shipped').notNull(), // 发货状态：not_shipped, shipped
-  shippingInfo: text('shippingInfo'), // 发货信息
   notes: text('notes'), // 备注信息
 });
 
