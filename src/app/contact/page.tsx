@@ -13,10 +13,10 @@ export default function ContactPage() {
           </p>
         </div>
 
-        {/* 联系方式网格 */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
+        {/* 联系方式 */}
+        <div className="mb-8">
           {/* 邮箱联系 */}
-          <div className="bg-blue-50 rounded-lg p-6">
+          <div className="bg-blue-50 rounded-lg p-6 max-w-2xl mx-auto">
             <div className="flex items-center gap-3 mb-4">
               <Mail className="h-8 w-8 text-blue-500" />
               <h2 className="text-xl font-semibold text-gray-900">邮箱联系</h2>
