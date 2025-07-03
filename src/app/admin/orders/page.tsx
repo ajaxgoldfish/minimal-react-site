@@ -9,7 +9,6 @@ import { Loader2, Package, Truck, RefreshCw } from 'lucide-react';
 // 订单状态类型定义
 type OrderStatus = 'pending' | 'paid' | 'cancelled';
 type ShippingStatus = 'not_shipped' | 'shipped';
-type RefundStatus = 'normal' | 'pending' | 'approved' | 'rejected';
 
 interface Order {
   id: number;
@@ -22,8 +21,6 @@ interface Order {
   productId: number | null;
   shippingStatus: ShippingStatus;
   shippingInfo: string | null;
-  refundStatus: RefundStatus;
-  refundRequestInfo: string | null;
   notes: string | null;
   user: {
     id: number;
@@ -128,31 +125,7 @@ export default function OrdersManagementPage() {
     }
   };
 
-  // 更新退款状态
-  const updateRefundStatus = async (orderId: number, refundStatus: RefundStatus) => {
-    try {
-      const response = await fetch('/api/admin/orders/refund', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId,
-          refundStatus,
-        }),
-      });
 
-      if (!response.ok) {
-        throw new Error('更新退款状态失败');
-      }
-
-      showNotification('success', '退款状态更新成功');
-      loadOrders();
-    } catch (error) {
-      console.error('更新退款状态失败:', error);
-      showNotification('error', error instanceof Error ? error.message : '更新退款状态失败');
-    }
-  };
 
   // 更新备注信息
   const updateNotes = async (orderId: number, notes: string) => {
@@ -292,7 +265,6 @@ export default function OrdersManagementPage() {
               key={order.id}
               order={order}
               onUpdateShipping={updateShippingStatus}
-              onUpdateRefund={updateRefundStatus}
               onUpdateNotes={updateNotes}
             />
           ))}
@@ -303,10 +275,9 @@ export default function OrdersManagementPage() {
 }
 
 // 订单卡片组件
-function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
+function OrderCard({ order, onUpdateShipping, onUpdateNotes }: {
   order: Order;
   onUpdateShipping: (orderId: number, status: ShippingStatus, trackingNumber?: string) => void;
-  onUpdateRefund: (orderId: number, status: RefundStatus) => void;
   onUpdateNotes: (orderId: number, notes: string) => void;
 }) {
   const [showShippingDialog, setShowShippingDialog] = useState(false);
@@ -332,15 +303,7 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
     }
   };
 
-  const getRefundStatusText = (status: RefundStatus) => {
-    switch (status) {
-      case 'normal': return '正常';
-      case 'pending': return '申请中';
-      case 'approved': return '已审批';
-      case 'rejected': return '已拒绝';
-      default: return status;
-    }
-  };
+
 
   // 状态颜色
   const getStatusColor = (status: OrderStatus) => {
@@ -360,15 +323,7 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
     }
   };
 
-  const getRefundStatusColor = (status: RefundStatus) => {
-    switch (status) {
-      case 'normal': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-purple-100 text-purple-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+
 
   const handleShipping = () => {
     if (order.shippingStatus === 'not_shipped') {
@@ -429,11 +384,7 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
               </span>
             )}
 
-            {order.refundStatus !== 'normal' && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRefundStatusColor(order.refundStatus)}`}>
-                退款状态: {getRefundStatusText(order.refundStatus)}
-              </span>
-            )}
+
           </div>
 
           {/* 发货信息 */}
@@ -444,15 +395,7 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
             </div>
           )}
 
-          {/* 退货申请信息 */}
-          {order.refundRequestInfo && order.refundStatus === 'pending' && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-600">退货申请信息</p>
-              <div className="text-sm bg-yellow-50 border border-yellow-200 px-3 py-2 rounded">
-                {order.refundRequestInfo}
-              </div>
-            </div>
-          )}
+
 
           {/* 备注信息 */}
           {order.notes && (
@@ -488,37 +431,7 @@ function OrderCard({ order, onUpdateShipping, onUpdateRefund, onUpdateNotes }: {
             编辑备注
           </Button>
 
-          {/* 退款操作 */}
-          {order.refundStatus === 'pending' && (
-            <div className="space-y-2">
-              <Button
-                onClick={() => onUpdateRefund(order.id, 'approved')}
-                variant="default"
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                批准退款
-              </Button>
-              <Button
-                onClick={() => onUpdateRefund(order.id, 'rejected')}
-                variant="outline"
-                className="w-full border-red-300 text-red-600 hover:bg-red-50"
-              >
-                拒绝退款
-              </Button>
-            </div>
-          )}
 
-          {order.refundStatus === 'approved' && (
-            <div className="text-center text-sm text-green-600">
-              ✓ 退款已批准
-            </div>
-          )}
-
-          {order.refundStatus === 'rejected' && (
-            <div className="text-center text-sm text-red-600">
-              ✗ 退款已拒绝
-            </div>
-          )}
         </div>
       </div>
 

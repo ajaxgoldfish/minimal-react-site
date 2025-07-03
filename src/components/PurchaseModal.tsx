@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from 'react';
-import { X, CreditCard, CheckCircle, AlertCircle, Loader2, LogIn } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, CreditCard, CheckCircle, AlertCircle, Loader2, LogIn, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePurchaseFlow, type ProductInfo } from '@/hooks/usePurchaseFlow';
 
@@ -24,6 +24,9 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
     createdOrder,
   } = usePurchaseFlow();
 
+  // 退款政策确认状态
+  const [refundPolicyAccepted, setRefundPolicyAccepted] = useState(false);
+
   // 当modal打开且有产品信息时，自动开始购买流程
   useEffect(() => {
     if (isOpen && product && step === 'idle') {
@@ -35,6 +38,7 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
   useEffect(() => {
     if (!isOpen) {
       resetFlow();
+      setRefundPolicyAccepted(false); // 重置退款政策确认状态
     }
   }, [isOpen, resetFlow]);
 
@@ -43,6 +47,7 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
   const handleClose = () => {
     onClose();
     resetFlow();
+    setRefundPolicyAccepted(false); // 重置退款政策确认状态
   };
 
   const handleGoToLogin = () => {
@@ -94,7 +99,7 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
           <div className="text-center">
             <CreditCard className="h-12 w-12 mx-auto mb-4 text-blue-600" />
             <h3 className="text-xl font-semibold mb-4">确认购买</h3>
-            
+
             {selectedProduct && (
               <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
                 <div className="flex justify-between items-center mb-2">
@@ -107,19 +112,45 @@ export function PurchaseModal({ isOpen, onClose, product }: PurchaseModalProps) 
                 </div>
               </div>
             )}
-            
+
+            {/* 退款政策确认 */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-yellow-600" />
+                <h4 className="font-semibold text-gray-900">退款政策</h4>
+              </div>
+              <div className="text-sm text-gray-700 space-y-2">
+                <p>• 商品在收到后7天内可申请退款</p>
+                <p>• 商品需保持原包装和完好状态</p>
+                <p>• 退款将在审核通过后3-5个工作日内处理</p>
+                <p>• 运费由买家承担（商品质量问题除外）</p>
+              </div>
+              <div className="mt-4 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="refund-policy"
+                  checked={refundPolicyAccepted}
+                  onChange={(e) => setRefundPolicyAccepted(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="refund-policy" className="text-sm text-gray-700">
+                  我已阅读并同意上述退款政策。如需退款，我将通过联系客服的方式申请。
+                </label>
+              </div>
+            </div>
+
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleClose}
                 className="flex-1"
               >
                 取消
               </Button>
-              <Button 
+              <Button
                 onClick={confirmPurchase}
                 className="flex-1"
-                disabled={!selectedProduct}
+                disabled={!selectedProduct || !refundPolicyAccepted}
               >
                 确认购买
               </Button>

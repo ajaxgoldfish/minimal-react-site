@@ -45,8 +45,6 @@ export const order = sqliteTable('order', {
   // 新增字段
   shippingStatus: text('shippingStatus').default('not_shipped').notNull(), // 发货状态：not_shipped, shipped
   shippingInfo: text('shippingInfo'), // 发货信息
-  refundStatus: text('refundStatus').default('normal').notNull(), // 退款状态：normal, pending, approved, rejected
-  refundRequestInfo: text('refundRequestInfo'), // 申请退货信息
   notes: text('notes'), // 备注信息
 });
 
