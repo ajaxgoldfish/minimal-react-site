@@ -303,12 +303,12 @@ export default function OrdersManagementPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               用户邮箱
             </label>
-            <Select value={searchEmail} onValueChange={setSearchEmail}>
+            <Select value={searchEmail || "all"} onValueChange={(value: string) => setSearchEmail(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择或输入邮箱" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部邮箱</SelectItem>
+                <SelectItem value="all">全部邮箱</SelectItem>
                 {emailOptions.map((email) => (
                   <SelectItem key={email} value={email}>
                     {email}
