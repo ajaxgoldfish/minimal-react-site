@@ -15,32 +15,51 @@ export default function ContactPage() {
 
         {/* 联系方式 */}
         <div className="mb-8">
-          {/* 邮箱联系 */}
           <div className="bg-blue-50 rounded-lg p-6 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <Mail className="h-8 w-8 text-blue-500" />
-              <h2 className="text-xl font-semibold text-gray-900">邮箱联系</h2>
-            </div>
-            <p className="text-gray-600 mb-4">
-              发送邮件给我们，我们会在24小时内回复您的问题
+            <p className="text-gray-600 mb-6 text-center">
+              通过以下方式联系我们，我们会尽快回复您的问题
             </p>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-gray-500">客服邮箱</p>
-                <p className="font-mono text-lg bg-white px-3 py-2 rounded border">
-                  support@example.com
-                </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* 邮箱联系 */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mail className="h-6 w-6 text-blue-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">邮箱联系</h3>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">客服邮箱</p>
+                  <p className="font-mono text-sm bg-white px-3 py-2 rounded border">
+                    support@example.com
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">退款专用邮箱</p>
+                  <p className="font-mono text-sm bg-white px-3 py-2 rounded border">
+                    refund@example.com
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">退款专用邮箱</p>
-                <p className="font-mono text-lg bg-white px-3 py-2 rounded border">
-                  refund@example.com
-                </p>
+
+              {/* WhatsApp联系 */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageCircle className="h-6 w-6 text-green-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">WhatsApp</h3>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">客服号码</p>
+                  <p className="font-mono text-sm bg-white px-3 py-2 rounded border">
+                    +86 138-0000-0000
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">
+                    点击号码直接跳转WhatsApp聊天
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-
-
         </div>
 
         {/* 退款申请专区 */}
