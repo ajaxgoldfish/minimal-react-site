@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, MapPin, Clock, MessageCircle, RefreshCw } from 'lucide-react';
+import { Mail, MapPin, Clock, MessageCircle, RefreshCw } from 'lucide-react';
 
 export default function ContactPage() {
   return (
