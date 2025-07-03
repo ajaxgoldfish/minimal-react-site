@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
-import { Loader2, Package, RefreshCw } from 'lucide-react';
+import { Loader2, Package, RefreshCw, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // 订单状态类型定义
 type OrderStatus = 'pending' | 'paid' | 'cancelled';
@@ -44,6 +46,13 @@ interface Order {
   } | null;
 }
 
+interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export default function OrdersManagementPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +63,17 @@ export default function OrdersManagementPage() {
     message: string;
   } | null>(null);
 
+  // 分页和查询状态
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
+  });
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searchOrderId, setSearchOrderId] = useState('');
+  const [emailOptions, setEmailOptions] = useState<string[]>([]);
+
   // 显示通知
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
@@ -61,24 +81,63 @@ export default function OrdersManagementPage() {
   };
 
   // 加载订单列表
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async (page = pagination.page, email = searchEmail, orderId = searchOrderId) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/orders');
-      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pagination.pageSize.toString(),
+      });
+
+      if (email) params.append('email', email);
+      if (orderId) params.append('orderId', orderId);
+
+      const response = await fetch(`/api/admin/orders?${params}`);
+
       if (!response.ok) {
         throw new Error('获取订单列表失败');
       }
 
       const data = await response.json();
       setOrders(data.orders || []);
+      setPagination(data.pagination);
     } catch (error) {
       console.error('加载订单列表失败:', error);
       setError(error instanceof Error ? error.message : '加载订单列表失败');
     } finally {
       setLoading(false);
     }
+  }, [pagination.page, pagination.pageSize, searchEmail, searchOrderId]);
+
+  // 加载邮箱选项
+  const loadEmailOptions = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/users/emails');
+      if (response.ok) {
+        const data = await response.json();
+        setEmailOptions(data.emails || []);
+      }
+    } catch (error) {
+      console.error('加载邮箱选项失败:', error);
+    }
   }, []);
+
+  // 搜索处理
+  const handleSearch = () => {
+    loadOrders(1, searchEmail, searchOrderId);
+  };
+
+  // 重置搜索
+  const handleReset = () => {
+    setSearchEmail('');
+    setSearchOrderId('');
+    loadOrders(1, '', '');
+  };
+
+  // 分页处理
+  const handlePageChange = (newPage: number) => {
+    loadOrders(newPage, searchEmail, searchOrderId);
+  };
 
   // 检查权限
   const checkPermission = useCallback(async () => {
@@ -105,7 +164,8 @@ export default function OrdersManagementPage() {
 
   useEffect(() => {
     checkPermission();
-  }, [checkPermission]);
+    loadEmailOptions();
+  }, [checkPermission, loadEmailOptions]);
 
 
 
@@ -187,7 +247,7 @@ export default function OrdersManagementPage() {
         <div className="max-w-md mx-auto text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">加载失败</h1>
           <p className="text-gray-600 mb-6">{error}</p>
-          <Button onClick={loadOrders}>
+          <Button onClick={() => loadOrders()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             重试
           </Button>
@@ -229,11 +289,67 @@ export default function OrdersManagementPage() {
       {/* 页面标题 */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">订单管理</h1>
-        <Button onClick={loadOrders} variant="outline">
+        <Button onClick={() => loadOrders()} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
           刷新
         </Button>
       </div>
+
+      {/* 查询表单 */}
+      <Card className="p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* 邮箱查询 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              用户邮箱
+            </label>
+            <Select value={searchEmail} onValueChange={setSearchEmail}>
+              <SelectTrigger>
+                <SelectValue placeholder="选择或输入邮箱" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">全部邮箱</SelectItem>
+                {emailOptions.map((email) => (
+                  <SelectItem key={email} value={email}>
+                    {email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="email"
+              placeholder="或直接输入邮箱"
+              value={searchEmail}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchEmail(e.target.value)}
+              className="mt-2"
+            />
+          </div>
+
+          {/* 订单号查询 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              订单号
+            </label>
+            <Input
+              type="number"
+              placeholder="输入订单号"
+              value={searchOrderId}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchOrderId(e.target.value)}
+            />
+          </div>
+
+          {/* 操作按钮 */}
+          <div className="flex items-end gap-2">
+            <Button onClick={handleSearch} className="flex-1">
+              <Search className="h-4 w-4 mr-2" />
+              搜索
+            </Button>
+            <Button onClick={handleReset} variant="outline" className="flex-1">
+              重置
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       {/* 订单列表 */}
       {orders.length === 0 ? (
@@ -253,6 +369,50 @@ export default function OrdersManagementPage() {
           ))}
         </div>
       )}
+
+      {/* 分页组件 */}
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <Button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page <= 1}
+            variant="outline"
+            size="sm"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            上一页
+          </Button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                variant={page === pagination.page ? "default" : "outline"}
+                size="sm"
+                className="min-w-[40px]"
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+
+          <Button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page >= pagination.totalPages}
+            variant="outline"
+            size="sm"
+          >
+            下一页
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* 分页信息 */}
+      <div className="text-center text-sm text-gray-500 mt-4">
+        共 {pagination.totalCount} 条记录，第 {pagination.page} / {pagination.totalPages} 页
+      </div>
     </div>
   );
 }
