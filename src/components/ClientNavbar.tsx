@@ -50,7 +50,7 @@ export default function ClientNavbar() {
   const menuItems: MenuItem[] = [...baseMenuItems, ...roleMenuItems];
 
   return (
-    <header className="sticky top-0 flex h-16 items-center px-4 md:px-6 border-b bg-background">
+    <header className="sticky top-0 z-50 flex h-16 items-center px-4 md:px-6 border-b bg-background">
       <nav className="flex items-center gap-6 w-full">
         {/* Mobile Menu Trigger */}
         <MobileMenu />
