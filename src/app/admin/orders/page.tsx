@@ -25,6 +25,7 @@ interface Order {
     id: number;
     name: string | null;
     clerkId: string;
+    email: string | null;
   } | null;
   product: {
     id: number;
@@ -322,6 +323,9 @@ function OrderCard({ order, onUpdateNotes }: {
               <p className="text-sm text-gray-600">用户信息</p>
               <p className="font-medium">{order.user?.name || '未知用户'}</p>
               <p className="text-xs text-gray-400">ID: {order.user?.clerkId}</p>
+              {order.user?.email && (
+                <p className="text-xs text-gray-500">邮箱: {order.user.email}</p>
+              )}
             </div>
             <div>
               <p className="text-sm text-gray-600">商品信息</p>
