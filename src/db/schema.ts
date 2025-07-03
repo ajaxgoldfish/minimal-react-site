@@ -55,7 +55,7 @@ export const order = sqliteTable('order', {
   productId: integer('productId').references(() => product.id),
   productVariantId: integer('product_variant_id').references(() => productVariant.id), // 关联商品规格
   // 新增字段
-  notes: text('notes'), // 备注信息
+  notes: text('notes'), // 订单动态信息
 });
 
 // 定义关系

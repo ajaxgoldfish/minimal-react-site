@@ -110,7 +110,7 @@ export default function OrdersManagementPage() {
 
 
 
-  // 更新备注信息
+  // 更新订单动态信息
   const updateNotes = async (orderId: number, notes: string) => {
     try {
       const response = await fetch('/api/admin/orders/notes', {
@@ -125,14 +125,14 @@ export default function OrdersManagementPage() {
       });
 
       if (!response.ok) {
-        throw new Error('更新备注信息失败');
+        throw new Error('更新订单动态信息失败');
       }
 
-      showNotification('success', '备注信息更新成功');
+      showNotification('success', '订单动态信息更新成功');
       loadOrders();
     } catch (error) {
-      console.error('更新备注信息失败:', error);
-      showNotification('error', error instanceof Error ? error.message : '更新备注信息失败');
+      console.error('更新订单动态信息失败:', error);
+      showNotification('error', error instanceof Error ? error.message : '更新订单动态信息失败');
     }
   };
 
@@ -352,28 +352,26 @@ function OrderCard({ order, onUpdateNotes }: {
 
 
 
-          {/* 备注信息 */}
-          {order.notes && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-600">备注信息</p>
-              <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded">
-                {order.notes}
-              </div>
+          {/* 订单动态信息 */}
+          <div className="mb-4">
+            <p className="text-sm text-gray-600">订单动态信息</p>
+            <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded">
+              {order.notes || '当前还没有更新，请及时关注'}
             </div>
-          )}
+          </div>
         </div>
 
         {/* 操作按钮 */}
         <div className="space-y-3">
 
 
-          {/* 编辑备注按钮 */}
+          {/* 编辑订单动态信息按钮 */}
           <Button
             onClick={() => setShowNotesDialog(true)}
             variant="outline"
             className="w-full"
           >
-            编辑备注
+            编辑订单动态
           </Button>
 
 
@@ -382,21 +380,21 @@ function OrderCard({ order, onUpdateNotes }: {
 
 
 
-      {/* 备注编辑对话框 */}
+      {/* 订单动态信息编辑对话框 */}
       {showNotesDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">编辑备注信息</h3>
+            <h3 className="text-lg font-semibold mb-4">编辑订单动态信息</h3>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                备注信息
+                订单动态信息
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={4}
-                placeholder="请输入备注信息"
+                placeholder="请输入订单动态信息，如：商品已发货、物流信息、处理进度等"
               />
             </div>
             <div className="flex space-x-3">

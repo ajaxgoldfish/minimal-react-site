@@ -59,39 +59,47 @@ export function OrderActions({
   // 根据订单状态显示不同的操作按钮
   const renderActions = () => {
     if (orderStatus === 'pending') {
-      // 待支付订单：继续支付、取消订单
+      // 待支付订单：显示订单动态信息 + 继续支付、取消订单
       return (
-        <div className="flex gap-2 pt-3 border-t">
-          <Button
-            onClick={() => setShowCancelDialog(true)}
-            variant="outline"
-            className="flex-1"
-          >
-            取消支付
-          </Button>
-          <Button
-            onClick={handleContinuePayment}
-            className="flex-1"
-          >
-            继续支付
-          </Button>
+        <div className="pt-3 border-t space-y-3">
+          {/* 订单动态信息 */}
+          <div className="mb-3">
+            <span className="text-sm text-gray-600">订单动态信息:</span>
+            <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded mt-1">
+              {notes || '当前还没有更新，请及时关注'}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowCancelDialog(true)}
+              variant="outline"
+              className="flex-1"
+            >
+              取消支付
+            </Button>
+            <Button
+              onClick={handleContinuePayment}
+              className="flex-1"
+            >
+              继续支付
+            </Button>
+          </div>
         </div>
       );
     }
 
     if (orderStatus === 'paid') {
-      // 已支付订单：显示备注信息和退款提示
+      // 已支付订单：显示订单动态信息和退款提示
       return (
         <div className="pt-3 border-t space-y-3">
-          {/* 备注信息 */}
-          {notes && (
-            <div className="mb-3">
-              <span className="text-sm text-gray-600">备注信息:</span>
-              <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded mt-1">
-                {notes}
-              </div>
+          {/* 订单动态信息 */}
+          <div className="mb-3">
+            <span className="text-sm text-gray-600">订单动态信息:</span>
+            <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded mt-1">
+              {notes || '当前还没有更新，请及时关注'}
             </div>
-          )}
+          </div>
 
           {/* 退款提示 */}
           <Button
@@ -102,6 +110,21 @@ export function OrderActions({
             <AlertTriangle className="h-4 w-4 mr-2" />
             需要退款？点击查看
           </Button>
+        </div>
+      );
+    }
+
+    if (orderStatus === 'cancelled') {
+      // 已取消订单：只显示订单动态信息
+      return (
+        <div className="pt-3 border-t space-y-3">
+          {/* 订单动态信息 */}
+          <div className="mb-3">
+            <span className="text-sm text-gray-600">订单动态信息:</span>
+            <div className="text-sm bg-blue-50 border border-blue-200 px-3 py-2 rounded mt-1">
+              {notes || '当前还没有更新，请及时关注'}
+            </div>
+          </div>
         </div>
       );
     }

@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 更新备注信息
+    // 更新订单动态信息
     const [updatedOrder] = await db
       .update(order)
       .set({ notes: notes || null })
@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '备注信息更新成功',
+      message: '订单动态信息更新成功',
       order: updatedOrder,
     });
   } catch (error) {
-    console.error('更新备注信息时出错:', error);
+    console.error('更新订单动态信息时出错:', error);
     
     if (error instanceof Error) {
       if (error.message === '未登录') {
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: '内部服务器错误' },
+      { error: '更新订单动态信息失败' },
       { status: 500 }
     );
   }
