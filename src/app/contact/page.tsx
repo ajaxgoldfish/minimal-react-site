@@ -85,10 +85,7 @@ export default function ContactPage() {
               <h2 className="text-lg font-semibold text-gray-900">服务时间</h2>
             </div>
             <div className="space-y-2 text-gray-700">
-              <p><strong>客服热线：</strong></p>
-              <p>周一至周五：9:00 - 18:00</p>
-              <p>周六至周日：10:00 - 16:00</p>
-              <p className="mt-3"><strong>邮件回复：</strong></p>
+              <p><strong>邮件回复：</strong></p>
               <p>24小时内回复（节假日可能延迟）</p>
             </div>
           </div>
