@@ -44,22 +44,24 @@ export default function ContactPage() {
         </div>
 
         {/* 退款申请专区 */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <RefreshCw className="h-6 w-6 text-yellow-600" />
-            <h2 className="text-xl font-semibold text-gray-900">退款申请</h2>
-          </div>
-          <p className="text-gray-700 mb-4">
-            如需申请退款，请通过以下方式联系我们，并提供完整的订单信息：
-          </p>
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-2">邮箱申请</h3>
-            <p className="text-sm text-gray-600 mb-2">
-              发送邮件至：<span className="font-mono bg-white px-2 py-1 rounded">refund@example.com</span>
+        <div className="mb-8">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <RefreshCw className="h-6 w-6 text-yellow-600" />
+              <h2 className="text-xl font-semibold text-gray-900">退款申请</h2>
+            </div>
+            <p className="text-gray-600 mb-4">
+              如需申请退款，请通过以下方式联系我们，并提供完整的订单信息：
             </p>
-            <p className="text-sm text-gray-600">
-              邮件中请包含：订单号、商品名称、退款原因
-            </p>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">邮箱申请</h3>
+              <p className="text-sm text-gray-600 mb-2">
+                发送邮件至：<span className="font-mono bg-white px-2 py-1 rounded">refund@example.com</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                邮件中请包含：订单号、商品名称、退款原因
+              </p>
+            </div>
           </div>
         </div>
 
