@@ -12,6 +12,8 @@ export interface ProductInfo {
   image?: string | null;
   imageData?: string | null;
   imageMimeType?: string | null;
+  variantId?: number;
+  variantName?: string;
 }
 
 export interface OrderInfo {
@@ -71,9 +73,9 @@ export const usePurchaseFlow = () => {
     setError('');
 
     try {
-      // 调用创建订单的服务器action
-      const result = await createOrder(selectedProduct.id);
-      
+      // 调用创建订单的服务器action，传递规格ID
+      const result = await createOrder(selectedProduct.id, selectedProduct.variantId);
+
       if (result.success && result.order) {
         setCreatedOrder(result.order);
         setStep('success');

@@ -3,12 +3,24 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Edit, Trash2, Plus, Settings } from 'lucide-react';
 import Image from 'next/image';
+import VariantManager from './VariantManager';
 
 interface DetailImage {
   imageData: string;
   imageMimeType: string;
+}
+
+interface ProductVariant {
+  id: number;
+  productId: number;
+  name: string;
+  price: number;
+  imageData: string | null;
+  imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
+  isDefault: number;
 }
 
 export interface Product {
@@ -16,11 +28,8 @@ export interface Product {
   name: string;
   description: string;
   category: string;
-  price: number;
   image: string | null;
-  imageData: string | null;
-  imageMimeType: string | null;
-  detailImages: DetailImage[] | null;
+  variants: ProductVariant[];
 }
 
 interface ProductTableProps {
@@ -39,6 +48,8 @@ export default function ProductTable({
   loading = false,
 }: ProductTableProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [showVariantManager, setShowVariantManager] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleDelete = async (productId: number) => {
     if (deletingId) return; // 防止重复点击
@@ -46,15 +57,18 @@ export default function ProductTable({
     if (window.confirm('确定要删除这个商品吗？此操作不可撤销。')) {
       setDeletingId(productId);
       try {
-        await onDelete(productId);
+        onDelete(productId);
       } finally {
         setDeletingId(null);
       }
     }
   };
 
-  const formatPrice = (price: number) => {
-    return `¥${price.toFixed(2)}`;
+
+
+  const handleManageVariants = (product: Product) => {
+    setSelectedProduct(product);
+    setShowVariantManager(true);
   };
 
   if (loading) {
@@ -108,7 +122,10 @@ export default function ProductTable({
                     分类
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    价格
+                    价格范围
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    规格数量
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     操作
@@ -123,28 +140,37 @@ export default function ProductTable({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="relative aspect-[3/4] w-12">
-                        {product.imageData ? (
-                          <Image
-                            src={`data:${product.imageMimeType};base64,${product.imageData}`}
-                            alt={product.name}
-                            fill
-                            className="object-cover rounded-md"
-                            unoptimized={true}
-                            sizes="48px"
-                          />
-                        ) : product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className="object-cover rounded-md"
-                            sizes="48px"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
-                            <span className="text-xs text-gray-500">无图片</span>
-                          </div>
-                        )}
+                        {(() => {
+                          const defaultVariant = product.variants?.find(v => v.isDefault === 1) || product.variants?.[0];
+                          if (defaultVariant?.imageData) {
+                            return (
+                              <Image
+                                src={`data:${defaultVariant.imageMimeType};base64,${defaultVariant.imageData}`}
+                                alt={product.name}
+                                fill
+                                className="object-cover rounded-md"
+                                unoptimized={true}
+                                sizes="48px"
+                              />
+                            );
+                          } else if (product.image) {
+                            return (
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                fill
+                                className="object-cover rounded-md"
+                                sizes="48px"
+                              />
+                            );
+                          } else {
+                            return (
+                              <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
+                                <span className="text-xs text-gray-500">无图片</span>
+                              </div>
+                            );
+                          }
+                        })()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -162,8 +188,26 @@ export default function ProductTable({
                         {product.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatPrice(product.price)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.variants && product.variants.length > 0 ? (
+                        <div>
+                          <div className="font-medium">
+                            ¥{Math.min(...product.variants.map(v => v.price)).toFixed(2)} -
+                            ¥{Math.max(...product.variants.map(v => v.price)).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            默认: ¥{product.variants.find(v => v.isDefault === 1)?.price.toFixed(2) || product.variants[0]?.price.toFixed(2)}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">无规格</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <span className="font-medium">{product.variants?.length || 0}</span>
+                        <span className="ml-1 text-xs text-gray-500">个规格</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
@@ -175,6 +219,15 @@ export default function ProductTable({
                         >
                           <Edit className="h-3 w-3" />
                           编辑
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleManageVariants(product)}
+                          className="flex items-center gap-1"
+                        >
+                          <Settings className="h-3 w-3" />
+                          规格
                         </Button>
                         <Button
                           variant="destructive"
@@ -195,6 +248,18 @@ export default function ProductTable({
           </div>
         )}
       </Card>
+
+      {/* 规格管理器 */}
+      {showVariantManager && selectedProduct && (
+        <VariantManager
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+          onClose={() => {
+            setShowVariantManager(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 }

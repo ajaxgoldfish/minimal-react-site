@@ -12,6 +12,7 @@ export async function GET() {
       with: {
         user: true,
         product: true,
+        productVariant: true,
       },
       orderBy: (orders, { desc }) => [desc(orders.createdAt)],
     });

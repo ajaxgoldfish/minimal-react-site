@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import ProductTable from '@/components/admin/ProductTable';
-import ProductForm from '@/components/admin/ProductForm';
+import SimpleProductForm from '@/components/admin/SimpleProductForm';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -11,16 +11,24 @@ interface DetailImage {
   imageMimeType: string;
 }
 
+interface ProductVariant {
+  id: number;
+  productId: number;
+  name: string;
+  price: number;
+  imageData: string | null;
+  imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
+  isDefault: number;
+}
+
 export interface Product {
   id: number;
   name: string;
   description: string;
   category: string;
-  price: number;
   image: string | null;
-  imageData: string | null;
-  imageMimeType: string | null;
-  detailImages: DetailImage[] | null;
+  variants: ProductVariant[];
 }
 
 export default function AdminProductsPage() {
@@ -138,7 +146,7 @@ export default function AdminProductsPage() {
 
 
   // 添加商品
-  const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
+  const handleAddProduct = async (productData: Omit<Product, 'id' | 'variants'>) => {
     try {
       const response = await fetchWithRetry('/api/admin/products', {
         method: 'POST',
@@ -167,7 +175,7 @@ export default function AdminProductsPage() {
   };
 
   // 编辑商品
-  const handleEditProduct = async (productData: Omit<Product, 'id'>) => {
+  const handleEditProduct = async (productData: Omit<Product, 'id' | 'variants'>) => {
     if (!editingProduct) return;
     
     try {
@@ -325,7 +333,7 @@ export default function AdminProductsPage() {
 
       {/* 商品表单弹窗 */}
       {showForm && (
-        <ProductForm
+        <SimpleProductForm
           product={editingProduct}
           onSubmit={editingProduct ? handleEditProduct : handleAddProduct}
           onCancel={handleCloseForm}

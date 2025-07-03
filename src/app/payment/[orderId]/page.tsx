@@ -11,6 +11,7 @@ async function getOrderDetails(orderId: string, clerkId: string) {
     with: {
       user: true,
       product: true,
+      productVariant: true,
     },
   });
 
@@ -54,9 +55,12 @@ export default async function PaymentPage({
             <h3 className="text-lg font-semibold mt-2">
               {orderDetails.product!.name}
             </h3>
+            {orderDetails.productVariant && (
+              <p className="text-sm text-gray-600">规格: {orderDetails.productVariant.name}</p>
+            )}
             <p className="text-gray-600">{orderDetails.product!.description}</p>
             <p className="text-2xl font-bold mt-4">
-              ${orderDetails.amount.toFixed(2)}
+              ¥{orderDetails.amount.toFixed(2)}
             </p>
           </div>
         </div>

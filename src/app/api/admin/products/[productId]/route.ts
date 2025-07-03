@@ -21,21 +21,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, category, price, image, imageData, imageMimeType, detailImages } = body;
+    const { name, description, category, image } = body;
 
     // 验证必填字段
-    if (!name || !description || !category || !price) {
+    if (!name || !description || !category) {
       return NextResponse.json(
-        { error: '商品名称、描述、分类和价格都是必填的' },
-        { status: 400 }
-      );
-    }
-
-    // 验证价格
-    const numPrice = parseFloat(price);
-    if (isNaN(numPrice) || numPrice <= 0) {
-      return NextResponse.json(
-        { error: '价格必须是大于0的数字' },
+        { error: '商品名称、描述和分类都是必填的' },
         { status: 400 }
       );
     }
@@ -49,45 +40,15 @@ export async function PUT(
       return NextResponse.json({ error: '商品不存在' }, { status: 404 });
     }
 
-    // 更新商品
-    const updateData: {
-      name: string;
-      description: string;
-      category: string;
-      price: number;
-      image?: string | null;
-      imageData?: string | null;
-      imageMimeType?: string | null;
-      detailImages?: string | null;
-    } = {
-      name: name.trim(),
-      description: description.trim(),
-      category: category.trim(),
-      price: numPrice,
-    };
-
-    // 如果提供了新的图片数据，则更新图片相关字段
-    if (imageData) {
-      updateData.imageData = imageData;
-      updateData.imageMimeType = imageMimeType;
-      updateData.image = null; // 清除URL，使用二进制数据
-    } else if (image) {
-      updateData.image = image.trim();
-      // 如果提供了URL，可以选择清除二进制数据或保留
-    }
-
-    // 处理详情图数据
-    if (detailImages !== undefined) {
-      if (detailImages && Array.isArray(detailImages) && detailImages.length > 0) {
-        updateData.detailImages = JSON.stringify(detailImages);
-      } else {
-        updateData.detailImages = null;
-      }
-    }
-
+    // 更新商品基本信息
     const [updatedProduct] = await db
       .update(product)
-      .set(updateData)
+      .set({
+        name: name.trim(),
+        description: description.trim(),
+        category: category.trim(),
+        image: image ? image.trim() : null,
+      })
       .where(eq(product.id, productId))
       .returning();
 

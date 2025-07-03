@@ -4,13 +4,26 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { PurchaseModal } from "@/components/PurchaseModal";
-import type { ProductInfo } from "@/hooks/usePurchaseFlow";
+
+
 
 // 详情图类型定义
 export interface DetailImage {
   imageData: string;
   imageMimeType: string;
+}
+
+// 商品规格类型定义
+export interface ProductVariant {
+  id: number;
+  productId: number;
+  name: string;
+  price: number;
+  imageData: string | null;
+  imageMimeType: string | null;
+  detailImages: DetailImage[] | null;
+  isDefault: number | null;
+  createdAt: Date;
 }
 
 // 为客户端组件定义一个纯粹的、与数据库实现无关的类型
@@ -24,6 +37,7 @@ export interface ProductType {
   detailImages: DetailImage[] | null;
   category: string;
   price: number;
+  variants: ProductVariant[];
 }
 
 interface ProductListProps {
@@ -36,13 +50,13 @@ export default function ProductList({
   selectedCategory,
 }: ProductListProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductInfo | null>(null);
   const itemsPerPage = 8;
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory]);
+
+
 
   const categories = ["所有商品", "一类", "二类", "三类", "四类", "五类"];
 
@@ -59,17 +73,7 @@ export default function ProductList({
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
-  const handlePurchaseClick = (product: ProductType) => {
-    // 转换为Modal所需的格式
-    const productInfo: ProductInfo = {
-      id: product.id.toString(),
-      name: product.name,
-      price: product.price,
-      image: product.image,
-    };
-    setSelectedProduct(productInfo);
-    setIsModalOpen(true);
-  };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -96,30 +100,37 @@ export default function ProductList({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {currentProducts.map((product) => (
-          <div key={product.id} className="border rounded-lg shadow-lg overflow-hidden flex flex-col">
-            <div className="aspect-[3/4] bg-gray-200 flex items-center justify-center relative">
-              {product.imageData ? (
-                <Image
-                  src={`data:${product.imageMimeType};base64,${product.imageData}`}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                  unoptimized={true}
-                />
-              ) : product.image ? (
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gray-300 rounded flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">无图片</span>
-                </div>
-              )}
-            </div>
+        {currentProducts.map((product) => {
+          // 获取默认规格用于显示
+          const defaultVariant = product.variants?.find(v => v.isDefault === 1) || product.variants?.[0];
+          const displayImage = defaultVariant?.imageData;
+          const displayImageType = defaultVariant?.imageMimeType;
+          const displayPrice = defaultVariant?.price || 0;
+
+          return (
+            <div key={product.id} className="border rounded-lg shadow-lg overflow-hidden flex flex-col">
+              <div className="aspect-[3/4] bg-gray-200 flex items-center justify-center relative">
+                {displayImage ? (
+                  <Image
+                    src={`data:${displayImageType};base64,${displayImage}`}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    unoptimized={true}
+                  />
+                ) : product.image ? (
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gray-300 rounded flex items-center justify-center">
+                    <span className="text-gray-500 text-sm">无图片</span>
+                  </div>
+                )}
+              </div>
             <div className="p-4 flex flex-col flex-grow">
               <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
               <p className="text-gray-600 line-clamp-2 min-h-[3rem]">
@@ -128,24 +139,24 @@ export default function ProductList({
               <div className="mt-auto pt-4">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-xl font-bold text-blue-600">
-                    ¥{product.price.toFixed(2)}
+                    ¥{displayPrice.toFixed(2)}
                   </span>
+                  {product.variants && product.variants.length > 1 && (
+                    <span className="text-sm text-gray-500">
+                      {product.variants.length} 个规格
+                    </span>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/products/${product.id}`} passHref className="flex-1">
-                    <Button variant="outline" className="w-full">详情</Button>
+                <div className="w-full">
+                  <Link href={`/products/${product.id}`} passHref className="w-full">
+                    <Button className="w-full">立即购买</Button>
                   </Link>
-                  <Button 
-                    onClick={() => handlePurchaseClick(product)}
-                    className="flex-1"
-                  >
-                    购买
-                  </Button>
                 </div>
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex justify-center items-center gap-4 mt-8">
@@ -158,12 +169,7 @@ export default function ProductList({
         </Button>
       </div>
 
-      {/* 购买Modal */}
-      <PurchaseModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
+
     </div>
   );
 } 
