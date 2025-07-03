@@ -107,7 +107,7 @@ export default function OrdersManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.pageSize, searchEmail, searchOrderId]);
+  }, [pagination.page, pagination.pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 加载邮箱选项
   const loadEmailOptions = useCallback(async () => {
@@ -303,7 +303,10 @@ export default function OrdersManagementPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               用户邮箱
             </label>
-            <Select value={searchEmail || "all"} onValueChange={(value: string) => setSearchEmail(value === "all" ? "" : value)}>
+            <Select value={searchEmail || "all"} onValueChange={(value: string) => {
+              const newEmail = value === "all" ? "" : value;
+              setSearchEmail(newEmail);
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="选择或输入邮箱" />
               </SelectTrigger>
