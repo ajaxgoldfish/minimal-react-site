@@ -1,8 +1,31 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Mail, Phone, MessageCircle } from 'lucide-react';
+import { AlertTriangle, Mail, Phone, MessageCircle, Copy } from 'lucide-react';
 
 export default function RefundInfoPage() {
+  // 复制退款申请模板
+  const copyRefundTemplate = async () => {
+    const template = `退款申请
+
+1. 订单号：[请填写您的订单号]
+
+2. 购买商品名称：[请填写商品名称]
+
+3. 退款原因详细说明：[请详细说明退款原因]
+
+4. 商品照片：[如有质量问题，请附上商品照片]
+
+感谢您的理解与配合！`;
+
+    try {
+      await navigator.clipboard.writeText(template);
+      alert('退款申请模板已复制到剪贴板！');
+    } catch (err) {
+      console.error('复制失败:', err);
+      alert('复制失败，请手动复制模板内容');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white rounded-lg shadow-md p-8">
@@ -102,6 +125,18 @@ export default function RefundInfoPage() {
                 <span>商品照片（如有质量问题）</span>
               </li>
             </ul>
+          </div>
+
+          {/* 一键复制模板按钮 */}
+          <div className="mt-4">
+            <Button
+              onClick={copyRefundTemplate}
+              variant="outline"
+              className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              一键复制退款申请模板
+            </Button>
           </div>
         </div>
 

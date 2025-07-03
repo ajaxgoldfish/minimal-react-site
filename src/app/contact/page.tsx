@@ -40,31 +40,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* 电话联系 */}
-          <div className="bg-green-50 rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Phone className="h-8 w-8 text-green-500" />
-              <h2 className="text-xl font-semibold text-gray-900">电话联系</h2>
-            </div>
-            <p className="text-gray-600 mb-4">
-              直接拨打我们的客服热线，获得即时帮助
-            </p>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-gray-500">客服热线</p>
-                <p className="font-mono text-lg bg-white px-3 py-2 rounded border">
-                  +86 400-123-4567
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">工作时间</p>
-                <p className="text-sm text-gray-700">
-                  周一至周五：9:00 - 18:00<br />
-                  周六至周日：10:00 - 16:00
-                </p>
-              </div>
-            </div>
-          </div>
+
         </div>
 
         {/* 退款申请专区 */}
