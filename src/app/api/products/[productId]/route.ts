@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { product } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
@@ -15,11 +15,11 @@ export async function GET(
     }
 
     const dbProduct = await db.query.product.findFirst({
-      where: eq(product.id, productId),
+      where: and(eq(product.id, productId), eq(product.isActive, 1)),
     });
 
     if (!dbProduct) {
-      return NextResponse.json({ error: '商品不存在' }, { status: 404 });
+      return NextResponse.json({ error: '商品不存在或已下架' }, { status: 404 });
     }
 
     return NextResponse.json({

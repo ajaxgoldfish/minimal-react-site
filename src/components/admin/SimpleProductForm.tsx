@@ -26,7 +26,6 @@ interface FormData {
   description: string;
   price: string;
   category: string;
-  image: string;
   isActive: boolean;
   mainImageFile: File | null;
   detailImageFiles: File[];
@@ -37,6 +36,7 @@ interface FormErrors {
   description?: string;
   price?: string;
   category?: string;
+  mainImage?: string;
 }
 
 export default function SimpleProductForm({
@@ -63,7 +63,6 @@ export default function SimpleProductForm({
     description: '',
     price: '',
     category: '',
-    image: '',
     isActive: true,
     mainImageFile: null,
     detailImageFiles: [],
@@ -77,7 +76,6 @@ export default function SimpleProductForm({
         description: product.description,
         price: product.price.toString(),
         category: product.category,
-        image: product.image || '',
         isActive: product.isActive === 1,
         mainImageFile: null,
         detailImageFiles: [],
@@ -107,6 +105,11 @@ export default function SimpleProductForm({
       newErrors.price = '请输入有效的价格';
     }
 
+    // 验证主图（编辑时如果已有图片则不强制要求上传新图片）
+    if (!isEditing && !formData.mainImageFile) {
+      newErrors.mainImage = '请上传商品主图';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -123,9 +126,9 @@ export default function SimpleProductForm({
 
     try {
       // 处理图片数据
-      let imageData = formData.image.trim() || null;
+      let imageData: string | null = null;
 
-      // 如果有新上传的文件，转换为JSON格式
+      // 如果有上传的文件，转换为JSON格式
       if (formData.mainImageFile || formData.detailImageFiles.length > 0) {
         const imageJson: { main?: string; details: string[] } = { details: [] };
 
@@ -141,6 +144,9 @@ export default function SimpleProductForm({
         }
 
         imageData = JSON.stringify(imageJson);
+      } else if (isEditing && product?.image) {
+        // 编辑时如果没有上传新图片，保留原有图片
+        imageData = product.image;
       }
 
       await onSubmit({
@@ -285,12 +291,17 @@ export default function SimpleProductForm({
                   const file = e.target.files?.[0] || null;
                   setFormData(prev => ({ ...prev, mainImageFile: file }));
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.mainImage ? 'border-red-500' : 'border-gray-300'
+                }`}
                 disabled={submitting}
               />
               <p className="text-xs text-gray-500 mt-1">
                 支持 JPG、PNG、GIF 格式，建议尺寸 3:4
               </p>
+              {errors.mainImage && (
+                <p className="text-red-500 text-sm mt-1">{errors.mainImage}</p>
+              )}
               {formData.mainImageFile && (
                 <p className="text-sm text-green-600 mt-1">
                   已选择: {formData.mainImageFile.name}
@@ -324,22 +335,7 @@ export default function SimpleProductForm({
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                商品主图URL（可选）
-              </label>
-              <input
-                type="url"
-                value={formData.image}
-                onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="请输入图片URL（如果上传了文件，此字段将被忽略）"
-                disabled={submitting}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                如果同时上传了文件和输入了URL，将优先使用上传的文件
-              </p>
-            </div>
+
 
             {/* 提交按钮 */}
             <div className="flex justify-end gap-4">

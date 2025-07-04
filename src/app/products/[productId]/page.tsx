@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { PurchaseModal } from '@/components/PurchaseModal';
 import { Button } from '@/components/ui/button';
 
@@ -48,6 +48,9 @@ export default function ProductPage({
           } else {
             setProduct(null);
           }
+        } else if (response.status === 404) {
+          // 商品不存在或已下架
+          setProduct(null);
         } else {
           setProduct(null);
         }
@@ -73,7 +76,22 @@ export default function ProductPage({
   }
 
   if (!product) {
-    notFound();
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">商品不存在</h1>
+          <p className="text-gray-600 mb-6">
+            抱歉，您访问的商品不存在或已下架。
+          </p>
+          <Link
+            href="/products"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            返回商品列表
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -135,21 +153,12 @@ export default function ProductPage({
 
               {/* 购买按钮 */}
               <div className="space-y-4">
-                {product.isActive === 1 ? (
-                  <Button
-                    onClick={() => setIsModalOpen(true)}
-                    className="w-full"
-                  >
-                    立即购买
-                  </Button>
-                ) : (
-                  <Button
-                    disabled
-                    className="w-full"
-                  >
-                    商品已下架
-                  </Button>
-                )}
+                <Button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full"
+                >
+                  立即购买
+                </Button>
               </div>
             </div>
           </div>
