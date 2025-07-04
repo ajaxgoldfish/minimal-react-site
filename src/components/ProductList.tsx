@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -49,6 +50,28 @@ export default function ProductList({
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4 text-center">商品展示</h1>
+
+      {/* 提示卡片 */}
+      <div className="flex justify-center mb-8">
+        <Card className="max-w-2xl mx-auto p-6 bg-blue-50 border-blue-200">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">
+              <span className="text-yellow-500 mr-2">⚠️</span>
+              温馨提示
+            </h3>
+            <p className="text-blue-800 leading-relaxed">
+              下面的商品只是我们的部分商品、部分型号的代表。因为型号太多，所以强烈建议您联系客服进行沟通后我们上架，然后您再下单。
+            </p>
+            <div className="mt-4 flex justify-center gap-4">
+              <Link href="/contact">
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  联系客服
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
         {categories.map((category) => (
