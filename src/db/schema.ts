@@ -22,23 +22,9 @@ export const product = sqliteTable('product', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   description: text('description').notNull(),
-  image: text('image'), // 保留原有的URL字段，用于向后兼容
-  category: text('category').notNull(),
-});
-
-// 商品规格表
-export const productVariant = sqliteTable('product_variant', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  productId: integer('product_id').notNull().references(() => product.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(), // 规格名称，如 "红色-L码", "128GB-银色"
   price: real('price').notNull(),
-  imageData: text('image_data'), // base64编码的图片数据
-  imageMimeType: text('image_mime_type'), // 图片MIME类型
-  detailImages: text('detail_images'), // 详情图JSON数据
-  isDefault: integer('is_default').default(0), // 是否为默认规格 (0=否, 1=是)
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .default(sql`(strftime('%s', 'now'))`)
-    .notNull(),
+  image: text('image'), // JSON格式存储图片数据: {"main":"base64...", "details":["base64..."]}
+  category: text('category').notNull(),
 });
 
 // 订单表 - 使用经典的单数表名，但保持现有的列名
@@ -53,7 +39,6 @@ export const order = sqliteTable('order', {
     .notNull(),
   userId: integer('userId').references(() => user.id),
   productId: integer('productId').references(() => product.id),
-  productVariantId: integer('product_variant_id').references(() => productVariant.id), // 关联商品规格
   // 新增字段
   notes: text('notes'), // 订单动态信息
 });
@@ -65,15 +50,6 @@ export const userRelations = relations(user, ({ many }) => ({
 
 export const productRelations = relations(product, ({ many }) => ({
   orders: many(order),
-  variants: many(productVariant),
-}));
-
-export const productVariantRelations = relations(productVariant, ({ one, many }) => ({
-  product: one(product, {
-    fields: [productVariant.productId],
-    references: [product.id],
-  }),
-  orders: many(order),
 }));
 
 export const orderRelations = relations(order, ({ one }) => ({
@@ -84,9 +60,5 @@ export const orderRelations = relations(order, ({ one }) => ({
   product: one(product, {
     fields: [order.productId],
     references: [product.id],
-  }),
-  productVariant: one(productVariant, {
-    fields: [order.productVariantId],
-    references: [productVariant.id],
   }),
 }));

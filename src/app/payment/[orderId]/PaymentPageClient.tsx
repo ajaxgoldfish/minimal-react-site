@@ -15,30 +15,20 @@ interface Order {
   paypalOrderId: string | null;
   userId: number | null;
   productId: number | null;
-  productVariantId: number | null;
+  notes: string | null;
   user: {
     id: number;
     clerkId: string;
     name: string | null;
-    age: number | null;
+    email: string | null;
   } | null;
   product: {
     id: number;
     name: string;
     description: string;
+    price: number;
     image: string | null;
     category: string;
-  } | null;
-  productVariant: {
-    id: number;
-    productId: number;
-    name: string;
-    price: number;
-    imageData: string | null;
-    imageMimeType: string | null;
-    detailImages: string | null;
-    isDefault: number | null;
-    createdAt: Date;
   } | null;
 }
 

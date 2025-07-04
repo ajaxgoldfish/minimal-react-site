@@ -21,12 +21,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, category, image } = body;
+    const { name, description, category, price, image } = body;
 
     // 验证必填字段
-    if (!name || !description || !category) {
+    if (!name || !description || !category || !price) {
       return NextResponse.json(
-        { error: '商品名称、描述和分类都是必填的' },
+        { error: '商品名称、描述、分类和价格都是必填的' },
         { status: 400 }
       );
     }
@@ -47,6 +47,7 @@ export async function PUT(
         name: name.trim(),
         description: description.trim(),
         category: category.trim(),
+        price: parseFloat(price),
         image: image ? image.trim() : null,
       })
       .where(eq(product.id, productId))

@@ -5,40 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { X } from 'lucide-react';
 
-interface DetailImage {
-  imageData: string;
-  imageMimeType: string;
-}
-
-interface ProductVariant {
-  id: number;
-  productId: number;
-  name: string;
-  price: number;
-  imageData: string | null;
-  imageMimeType: string | null;
-  detailImages: DetailImage[] | null;
-  isDefault: number;
-}
-
 export interface Product {
   id: number;
   name: string;
   description: string;
+  price: number;
   category: string;
   image: string | null;
-  variants: ProductVariant[];
 }
 
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (productData: Omit<Product, 'id' | 'variants'>) => Promise<void>;
+  onSubmit: (productData: Omit<Product, 'id'>) => Promise<void>;
   onCancel: () => void;
 }
 
 interface FormData {
   name: string;
   description: string;
+  price: string;
   category: string;
   image: string;
 }
@@ -46,6 +31,7 @@ interface FormData {
 interface FormErrors {
   name?: string;
   description?: string;
+  price?: string;
   category?: string;
 }
 
@@ -61,6 +47,7 @@ export default function SimpleProductForm({
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
+    price: '',
     category: '',
     image: '',
   });
@@ -71,6 +58,7 @@ export default function SimpleProductForm({
       setFormData({
         name: product.name,
         description: product.description,
+        price: product.price.toString(),
         category: product.category,
         image: product.image || '',
       });
@@ -93,6 +81,12 @@ export default function SimpleProductForm({
       newErrors.category = '商品分类不能为空';
     }
 
+    if (!formData.price.trim()) {
+      newErrors.price = '商品价格不能为空';
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
+      newErrors.price = '请输入有效的价格';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -111,6 +105,7 @@ export default function SimpleProductForm({
       await onSubmit({
         name: formData.name.trim(),
         description: formData.description.trim(),
+        price: parseFloat(formData.price),
         category: formData.category.trim(),
         image: formData.image.trim() || null,
       });
@@ -176,6 +171,27 @@ export default function SimpleProductForm({
                 />
                 {errors.category && (
                   <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  商品价格 *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.price ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="请输入商品价格"
+                  disabled={submitting}
+                />
+                {errors.price && (
+                  <p className="text-red-500 text-sm mt-1">{errors.price}</p>
                 )}
               </div>
             </div>

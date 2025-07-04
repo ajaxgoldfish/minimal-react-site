@@ -58,7 +58,6 @@ export default async function UserPage() {
       orders: {
         with: {
           product: true,
-          productVariant: true,
         },
         orderBy: (orders, { desc }) => [desc(orders.createdAt)],
       },
@@ -85,9 +84,7 @@ export default async function UserPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{order.product?.name}</h3>
-                    {order.productVariant && (
-                      <p className="text-sm text-gray-600">规格: {order.productVariant.name}</p>
-                    )}
+
                     <p className="text-gray-600">订单号: {order.id}</p>
                     <p className="text-sm text-gray-500">
                       创建时间: {order.createdAt instanceof Date

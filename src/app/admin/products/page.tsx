@@ -6,29 +6,13 @@ import SimpleProductForm from '@/components/admin/SimpleProductForm';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-interface DetailImage {
-  imageData: string;
-  imageMimeType: string;
-}
-
-interface ProductVariant {
-  id: number;
-  productId: number;
-  name: string;
-  price: number;
-  imageData: string | null;
-  imageMimeType: string | null;
-  detailImages: DetailImage[] | null;
-  isDefault: number;
-}
-
 export interface Product {
   id: number;
   name: string;
   description: string;
+  price: number;
   category: string;
-  image: string | null;
-  variants: ProductVariant[];
+  image: string | null; // JSON格式: {"main":"base64...", "details":["base64..."]}
 }
 
 export default function AdminProductsPage() {
@@ -56,20 +40,7 @@ export default function AdminProductsPage() {
         throw new Error(data.error || '获取商品列表失败');
       }
 
-      // 解析详情图JSON数据
-      const productsWithParsedImages = data.products.map((product: Product & { detailImages: string | null }) => ({
-        ...product,
-        detailImages: product.detailImages ?
-          (() => {
-            try {
-              return JSON.parse(product.detailImages) as DetailImage[];
-            } catch (e) {
-              console.error('Failed to parse detail images for product', product.id, e);
-              return null;
-            }
-          })() : null
-      }));
-      setProducts(productsWithParsedImages);
+      setProducts(data.products);
     } catch (error) {
       console.error('加载商品列表失败:', error);
       setError(error instanceof Error ? error.message : '加载商品列表失败');
@@ -146,7 +117,7 @@ export default function AdminProductsPage() {
 
 
   // 添加商品
-  const handleAddProduct = async (productData: Omit<Product, 'id' | 'variants'>) => {
+  const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
     try {
       const response = await fetchWithRetry('/api/admin/products', {
         method: 'POST',
@@ -175,7 +146,7 @@ export default function AdminProductsPage() {
   };
 
   // 编辑商品
-  const handleEditProduct = async (productData: Omit<Product, 'id' | 'variants'>) => {
+  const handleEditProduct = async (productData: Omit<Product, 'id'>) => {
     if (!editingProduct) return;
     
     try {

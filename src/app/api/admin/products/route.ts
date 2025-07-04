@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/db';
-import { product, productVariant } from '@/db/schema';
+import { product } from '@/db/schema';
 
 // 获取所有商品 (GET)
 export async function GET() {
@@ -11,33 +11,11 @@ export async function GET() {
 
     const products = await db.query.product.findMany({
       orderBy: (products, { desc }) => [desc(products.id)],
-      with: {
-        variants: {
-          orderBy: (variants, { asc, desc }) => [desc(variants.isDefault), asc(variants.id)],
-        },
-      },
     });
-
-    // 转换数据格式，解析规格的详情图JSON
-    const productsWithVariants = products.map(product => ({
-      ...product,
-      variants: product.variants.map(variant => ({
-        ...variant,
-        detailImages: variant.detailImages ?
-          (() => {
-            try {
-              return JSON.parse(variant.detailImages);
-            } catch (e) {
-              console.error('Failed to parse detail images for variant', variant.id, e);
-              return null;
-            }
-          })() : null,
-      })),
-    }));
 
     return NextResponse.json({
       success: true,
-      products: productsWithVariants,
+      products,
     });
   } catch (error) {
     console.error('获取商品列表时出错:', error);
@@ -65,12 +43,12 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { name, description, category, image } = body;
+    const { name, description, category, price, image } = body;
 
     // 验证必填字段
-    if (!name || !description || !category) {
+    if (!name || !description || !category || !price) {
       return NextResponse.json(
-        { error: '商品名称、描述和分类都是必填的' },
+        { error: '商品名称、描述、分类和价格都是必填的' },
         { status: 400 }
       );
     }
@@ -82,28 +60,15 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description.trim(),
         category: category.trim(),
+        price: parseFloat(price),
         image: image ? image.trim() : null,
-      })
-      .returning();
-
-    // 创建默认规格
-    const [defaultVariant] = await db
-      .insert(productVariant)
-      .values({
-        productId: newProduct.id,
-        name: '默认规格',
-        price: 0,
-        isDefault: 1,
       })
       .returning();
 
     return NextResponse.json({
       success: true,
       message: '商品创建成功',
-      product: {
-        ...newProduct,
-        variants: [defaultVariant],
-      },
+      product: newProduct,
     });
   } catch (error) {
     console.error('创建商品时出错:', error);

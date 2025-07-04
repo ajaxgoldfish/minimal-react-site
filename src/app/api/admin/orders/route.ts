@@ -13,7 +13,6 @@ type OrderWithRelations = {
   createdAt: Date;
   userId: number | null;
   productId: number | null;
-  productVariantId: number | null;
   notes: string | null;
   user: {
     id: number;
@@ -25,16 +24,9 @@ type OrderWithRelations = {
     id: number;
     name: string;
     description: string;
-    category: string;
-  } | null;
-  productVariant: {
-    id: number;
-    productId: number;
-    name: string;
     price: number;
-    imageData: string | null;
-    imageMimeType: string | null;
-    isDefault: number | null;
+    image: string | null;
+    category: string;
   } | null;
 };
 
@@ -92,7 +84,6 @@ export async function GET(request: NextRequest) {
           with: {
             user: true,
             product: true,
-            productVariant: true,
           },
           where: inArray(order.id, orderIds),
           orderBy: [desc(order.createdAt)],
@@ -107,7 +98,6 @@ export async function GET(request: NextRequest) {
         with: {
           user: true,
           product: true,
-          productVariant: true,
         },
         orderBy: [desc(order.createdAt)],
         limit: pageSize,

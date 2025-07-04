@@ -17,7 +17,7 @@ export async function getUsers() {
   }
 }
 
-export async function createOrder(productId: string, variantId?: number) {
+export async function createOrder(productId: string) {
   try {
     // 使用新的权限系统
     const currentUser = await requireAuth();
@@ -25,31 +25,11 @@ export async function createOrder(productId: string, variantId?: number) {
     // 查找商品
     const dbProduct = await db.query.product.findFirst({
       where: eq(product.id, parseInt(productId)),
-      with: {
-        variants: true,
-      },
     });
 
     if (!dbProduct) {
       throw new Error('Product not found');
     }
-
-    // 确定使用的规格
-    let selectedVariant;
-    if (variantId) {
-      selectedVariant = dbProduct.variants.find(v => v.id === variantId);
-      if (!selectedVariant) {
-        throw new Error('Product variant not found');
-      }
-    } else {
-      // 如果没有指定规格，使用默认规格
-      selectedVariant = dbProduct.variants.find(v => v.isDefault === 1) || dbProduct.variants[0];
-      if (!selectedVariant) {
-        throw new Error('No product variant available');
-      }
-    }
-
-
 
     // 创建订单
     const [newOrder] = await db
@@ -57,8 +37,7 @@ export async function createOrder(productId: string, variantId?: number) {
       .values({
         userId: currentUser.id,
         productId: dbProduct.id,
-        productVariantId: selectedVariant.id,
-        amount: selectedVariant.price,
+        amount: dbProduct.price,
         status: 'pending',
       })
       .returning();
@@ -72,12 +51,7 @@ export async function createOrder(productId: string, variantId?: number) {
         product: {
           id: dbProduct.id,
           name: dbProduct.name,
-          price: selectedVariant.price,
-        },
-        variant: {
-          id: selectedVariant.id,
-          name: selectedVariant.name,
-          price: selectedVariant.price,
+          price: dbProduct.price,
         },
       },
     };

@@ -7,34 +7,13 @@ import { PurchaseModal } from '@/components/PurchaseModal';
 import { Button } from '@/components/ui/button';
 
 
-interface DetailImage {
-  imageData: string;
-  imageMimeType: string;
-}
-
-interface ProductVariant {
-  id: number;
-  productId: number;
-  name: string;
-  price: number;
-  imageData: string | null;
-  imageMimeType: string | null;
-  detailImages: DetailImage[] | null;
-  isDefault: number | null;
-  createdAt: Date;
-}
-
 interface Product {
   id: number;
   name: string;
   description: string;
-  image: string | null;
-  imageData: string | null;
-  imageMimeType: string | null;
-  detailImages: DetailImage[] | null;
+  image: string | null; // JSON格式: {"main":"base64...", "details":["base64..."]}
   category: string;
   price: number;
-  variants: ProductVariant[];
 }
 
 export default function ProductPage({
@@ -43,7 +22,6 @@ export default function ProductPage({
   params: Promise<{ productId: string }>;
 }) {
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [loading, setLoading] = useState(true);
   const [productId, setProductId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,22 +41,11 @@ export default function ProductPage({
       try {
         const response = await fetch(`/api/products/${productId}`);
         if (response.ok) {
-          const productData = await response.json();
-          // 解析详情图JSON数据
-          if (productData.detailImages && typeof productData.detailImages === 'string') {
-            try {
-              productData.detailImages = JSON.parse(productData.detailImages);
-            } catch (e) {
-              console.error('Failed to parse detail images:', e);
-              productData.detailImages = null;
-            }
-          }
-          setProduct(productData);
-
-          // 设置默认选中的规格
-          if (productData.variants && productData.variants.length > 0) {
-            const defaultVariant = productData.variants.find((v: ProductVariant) => v.isDefault === 1) || productData.variants[0];
-            setSelectedVariant(defaultVariant);
+          const result = await response.json();
+          if (result.success) {
+            setProduct(result.product);
+          } else {
+            setProduct(null);
           }
         } else {
           setProduct(null);
@@ -114,26 +81,39 @@ export default function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* 商品图片 */}
           <div className="aspect-[3/4] relative">
-            {selectedVariant?.imageData ? (
-              <Image
-                src={`data:${selectedVariant.imageMimeType};base64,${selectedVariant.imageData}`}
-                alt={product.name}
-                fill
-                className="object-cover rounded-lg"
-                unoptimized={true}
-              />
-            ) : product.image ? (
-              <Image
-                src={product.image}
-                alt={product.name}
-                fill
-                className="object-cover rounded-lg"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
-                <span className="text-gray-500">无图片</span>
-              </div>
-            )}
+            {(() => {
+              if (product.image) {
+                try {
+                  const imageData = JSON.parse(product.image);
+                  if (imageData.main) {
+                    return (
+                      <Image
+                        src={imageData.main}
+                        alt={product.name}
+                        fill
+                        className="object-cover rounded-lg"
+                        unoptimized={true}
+                      />
+                    );
+                  }
+                } catch {
+                  // 如果解析失败，可能是旧格式的URL
+                  return (
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                  );
+                }
+              }
+              return (
+                <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-500">无图片</span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* 商品信息 */}
@@ -145,44 +125,20 @@ export default function ProductPage({
               <p className="text-gray-600 mb-4">{product.description}</p>
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-3xl font-bold text-blue-600">
-                  ¥{selectedVariant?.price.toFixed(2) || '0.00'}
+                  ¥{product.price.toFixed(2)}
                 </span>
                 <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
                   {product.category}
                 </span>
               </div>
 
-              {/* 规格选择 */}
-              {product.variants && product.variants.length > 1 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">选择规格</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {product.variants.map((variant) => (
-                      <button
-                        key={variant.id}
-                        onClick={() => setSelectedVariant(variant)}
-                        className={`p-3 border rounded-lg text-sm transition-colors ${
-                          selectedVariant?.id === variant.id
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <div className="font-medium">{variant.name}</div>
-                        <div className="text-xs text-gray-500">¥{variant.price.toFixed(2)}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* 购买按钮 */}
               <div className="space-y-4">
                 <Button
                   onClick={() => setIsModalOpen(true)}
                   className="w-full"
-                  disabled={!selectedVariant}
                 >
-                  {!selectedVariant ? '请选择规格' : '立即购买'}
+                  立即购买
                 </Button>
               </div>
             </div>
@@ -190,40 +146,48 @@ export default function ProductPage({
         </div>
 
         {/* 商品详情图 */}
-        {selectedVariant?.detailImages && selectedVariant.detailImages.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">商品详情</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {selectedVariant.detailImages.map((img: DetailImage, index: number) => (
-                <div key={index} className="aspect-[3/4] relative">
-                  <Image
-                    src={`data:${img.imageMimeType};base64,${img.imageData}`}
-                    alt={`${product.name} 详情图 ${index + 1}`}
-                    fill
-                    className="object-cover rounded-lg"
-                    unoptimized={true}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {(() => {
+          if (product.image) {
+            try {
+              const imageData = JSON.parse(product.image);
+              if (imageData.details && imageData.details.length > 0) {
+                return (
+                  <div className="mt-12">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">商品详情</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {imageData.details.map((img: string, index: number) => (
+                        <div key={index} className="aspect-[3/4] relative">
+                          <Image
+                            src={img}
+                            alt={`${product.name} 详情图 ${index + 1}`}
+                            fill
+                            className="object-cover rounded-lg"
+                            unoptimized={true}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+            } catch {
+              // 解析失败，不显示详情图
+            }
+          }
+          return null;
+        })()}
       </div>
 
       {/* 购买弹窗 */}
-      {isModalOpen && selectedVariant && (
+      {isModalOpen && (
         <PurchaseModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           product={{
             id: product.id.toString(),
             name: product.name,
-            price: selectedVariant.price,
+            price: product.price,
             image: product.image,
-            imageData: selectedVariant.imageData,
-            imageMimeType: selectedVariant.imageMimeType,
-            variantId: selectedVariant.id,
-            variantName: selectedVariant.name,
           }}
         />
       )}

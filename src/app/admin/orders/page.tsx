@@ -20,7 +20,6 @@ interface Order {
   createdAt: Date;
   userId: number | null;
   productId: number | null;
-  productVariantId: number | null;
 
   notes: string | null;
   user: {
@@ -33,16 +32,9 @@ interface Order {
     id: number;
     name: string;
     description: string;
-    category: string;
-  } | null;
-  productVariant: {
-    id: number;
-    productId: number;
-    name: string;
     price: number;
-    imageData: string | null;
-    imageMimeType: string | null;
-    isDefault: number | null;
+    image: string | null;
+    category: string;
   } | null;
 }
 
@@ -493,13 +485,8 @@ function OrderCard({ order, onUpdateNotes }: {
             <div>
               <p className="text-sm text-gray-600">商品信息</p>
               <p className="font-medium">{order.product?.name || '未知商品'}</p>
-              {order.productVariant ? (
-                <div className="text-sm text-gray-500">
-                  <p>规格: {order.productVariant.name}</p>
-                  <p>单价: ¥{order.productVariant.price.toFixed(2)}</p>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400">无规格信息</p>
+              {order.product?.price && (
+                <p className="text-sm text-gray-500">单价: ¥{order.product.price.toFixed(2)}</p>
               )}
             </div>
           </div>
