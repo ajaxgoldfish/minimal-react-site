@@ -13,6 +13,7 @@ export interface Product {
   price: number;
   category: string;
   image: string | null;
+  isActive: number;
 }
 
 interface ProductTableProps {
@@ -103,6 +104,9 @@ export default function ProductTable({
                     价格
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    状态
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     操作
                   </th>
                 </tr>
@@ -169,6 +173,15 @@ export default function ProductTable({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className="font-medium">¥{product.price.toFixed(2)}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        product.isActive === 1
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.isActive === 1 ? '可购买' : '已禁用'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">

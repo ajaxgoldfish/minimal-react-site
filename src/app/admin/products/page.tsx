@@ -13,6 +13,7 @@ export interface Product {
   price: number;
   category: string;
   image: string | null; // JSON格式: {"main":"base64...", "details":["base64..."]}
+  isActive: number;
 }
 
 export default function AdminProductsPage() {

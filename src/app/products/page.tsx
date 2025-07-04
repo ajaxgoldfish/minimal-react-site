@@ -1,7 +1,7 @@
 import ProductList from '@/components/ProductList';
 import { db } from '@/db';
 import { product } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const revalidate = 60; // 每60秒重新验证一次数据
 
@@ -9,11 +9,12 @@ async function getProducts(category?: string) {
   let products;
   if (category && category !== '所有商品') {
     products = await db.query.product.findMany({
-      where: eq(product.category, category),
-
+      where: and(eq(product.category, category), eq(product.isActive, 1)),
     });
   } else {
-    products = await db.query.product.findMany();
+    products = await db.query.product.findMany({
+      where: eq(product.isActive, 1),
+    });
   }
 
   return products;

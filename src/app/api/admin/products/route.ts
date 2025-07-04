@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { name, description, category, price, image } = body;
+    const { name, description, category, price, image, isActive } = body;
 
     // 验证必填字段
     if (!name || !description || !category || !price) {
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
         category: category.trim(),
         price: parseFloat(price),
         image: image ? image.trim() : null,
+        isActive: isActive !== undefined ? isActive : 1,
       })
       .returning();
 

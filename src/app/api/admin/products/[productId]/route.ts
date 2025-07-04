@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/db';
-import { product } from '@/db/schema';
+import { product, order } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 // 更新商品 (PUT)
@@ -21,7 +21,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, category, price, image } = body;
+    const { name, description, category, price, image, isActive } = body;
 
     // 验证必填字段
     if (!name || !description || !category || !price) {
@@ -49,6 +49,7 @@ export async function PUT(
         category: category.trim(),
         price: parseFloat(price),
         image: image ? image.trim() : null,
+        isActive: isActive !== undefined ? isActive : 1,
       })
       .where(eq(product.id, productId))
       .returning();
@@ -100,6 +101,17 @@ export async function DELETE(
 
     if (!existingProduct) {
       return NextResponse.json({ error: '商品不存在' }, { status: 404 });
+    }
+
+    // 检查是否有相关订单
+    const relatedOrders = await db.query.order.findMany({
+      where: eq(order.productId, productId),
+    });
+
+    if (relatedOrders.length > 0) {
+      return NextResponse.json({
+        error: `无法删除商品，因为有 ${relatedOrders.length} 个相关订单。请先处理这些订单。`,
+      }, { status: 400 });
     }
 
     // 删除商品

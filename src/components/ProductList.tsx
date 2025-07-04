@@ -12,6 +12,7 @@ export interface ProductType {
   image: string | null;
   category: string;
   price: number;
+  isActive: number;
 }
 
 interface ProductListProps {

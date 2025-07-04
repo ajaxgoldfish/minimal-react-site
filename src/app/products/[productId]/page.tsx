@@ -14,6 +14,7 @@ interface Product {
   image: string | null; // JSON格式: {"main":"base64...", "details":["base64..."]}
   category: string;
   price: number;
+  isActive: number;
 }
 
 export default function ProductPage({
@@ -134,12 +135,21 @@ export default function ProductPage({
 
               {/* 购买按钮 */}
               <div className="space-y-4">
-                <Button
-                  onClick={() => setIsModalOpen(true)}
-                  className="w-full"
-                >
-                  立即购买
-                </Button>
+                {product.isActive === 1 ? (
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    className="w-full"
+                  >
+                    立即购买
+                  </Button>
+                ) : (
+                  <Button
+                    disabled
+                    className="w-full"
+                  >
+                    商品已下架
+                  </Button>
+                )}
               </div>
             </div>
           </div>

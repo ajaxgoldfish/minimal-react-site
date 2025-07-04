@@ -12,6 +12,7 @@ export interface Product {
   price: number;
   category: string;
   image: string | null;
+  isActive: number;
 }
 
 interface ProductFormProps {
@@ -26,6 +27,7 @@ interface FormData {
   price: string;
   category: string;
   image: string;
+  isActive: boolean;
 }
 
 interface FormErrors {
@@ -50,6 +52,7 @@ export default function SimpleProductForm({
     price: '',
     category: '',
     image: '',
+    isActive: true,
   });
 
   // 初始化表单数据
@@ -61,6 +64,7 @@ export default function SimpleProductForm({
         price: product.price.toString(),
         category: product.category,
         image: product.image || '',
+        isActive: product.isActive === 1,
       });
     }
   }, [product]);
@@ -108,6 +112,7 @@ export default function SimpleProductForm({
         price: parseFloat(formData.price),
         category: formData.category.trim(),
         image: formData.image.trim() || null,
+        isActive: formData.isActive ? 1 : 0,
       });
     } finally {
       setSubmitting(false);
@@ -193,6 +198,22 @@ export default function SimpleProductForm({
                 {errors.price && (
                   <p className="text-red-500 text-sm mt-1">{errors.price}</p>
                 )}
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    disabled={submitting}
+                  />
+                  <span className="text-sm font-medium text-gray-700">允许购买</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  取消勾选将禁止用户购买此商品
+                </p>
               </div>
             </div>
 

@@ -25,6 +25,7 @@ export const product = sqliteTable('product', {
   price: real('price').notNull(),
   image: text('image'), // JSON格式存储图片数据: {"main":"base64...", "details":["base64..."]}
   category: text('category').notNull(),
+  isActive: integer('isActive').notNull().default(1), // 是否允许购买 (0=禁用, 1=启用)
 });
 
 // 订单表 - 使用经典的单数表名，但保持现有的列名

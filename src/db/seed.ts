@@ -8,6 +8,7 @@ const sampleProducts = [
     price: 999.99,
     image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&h=500&fit=crop',
     category: '电子产品',
+    isActive: 1,
   },
   {
     name: 'MacBook Air M3',
@@ -15,6 +16,7 @@ const sampleProducts = [
     price: 1299.99,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&h=500&fit=crop',
     category: '电子产品',
+    isActive: 1,
   },
   {
     name: 'AirPods Pro',
@@ -22,6 +24,7 @@ const sampleProducts = [
     price: 249.99,
     image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=500&h=500&fit=crop',
     category: '电子产品',
+    isActive: 1,
   },
   {
     name: '运动鞋',
@@ -29,6 +32,7 @@ const sampleProducts = [
     price: 89.99,
     image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop',
     category: '服装',
+    isActive: 1,
   },
   {
     name: '咖啡豆',
@@ -36,6 +40,7 @@ const sampleProducts = [
     price: 24.99,
     image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500&h=500&fit=crop',
     category: '食品',
+    isActive: 1,
   },
   {
     name: '护肤套装',
@@ -43,6 +48,7 @@ const sampleProducts = [
     price: 79.99,
     image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&h=500&fit=crop',
     category: '美妆',
+    isActive: 1,
   },
   {
     name: '瑜伽垫',
@@ -50,6 +56,7 @@ const sampleProducts = [
     price: 39.99,
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&h=500&fit=crop',
     category: '运动',
+    isActive: 0, // 这个商品设为禁用状态作为示例
   },
 ];
 
